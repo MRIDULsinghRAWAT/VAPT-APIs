@@ -52,7 +52,7 @@ export default function Layout() {
           color: 'var(--text-muted)',
         }}>
           <p>v0.1.0 — Phase 1</p>
-          <p style={{ marginTop: '0.25rem' }}>By Mridul Singh Rawat</p>
+          <p style={{ marginTop: '0.25rem' }}>API Pentesting Framework</p>
         </div>
       </aside>
 

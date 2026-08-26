@@ -1,20 +1,20 @@
-# Automated VAPT for Web APIs
+# 🛡️ Automated VAPT for Web APIs
 
 > An Automated Vulnerability Assessment & Penetration Testing Framework for Web APIs
-
-**By:** Mridul Singh Rawat | B.Tech CSE — Cybersecurity & Digital Forensics
 
 ---
 
 ## Overview
 
-This tool ingests an OpenAPI/Swagger spec (or captured traffic), builds a live map of every endpoint/parameter/auth requirement, then **actively attacks** that map across 5 focused OWASP API Top 10 categories:
+**Automated VAPT for Web APIs** is a specialized security framework designed to ingest OpenAPI/Swagger specifications (or captured HTTP traffic), map the complete attack surface, and **actively execute targeted exploits** across key OWASP API Security Top 10 categories:
 
-1. **BOLA** — Broken Object Level Authorization
-2. **Broken Authentication** — JWT/session weaknesses
-3. **Excessive Data Exposure** — over-returning data
-4. **Rate Limiting** — brute-forceable endpoints
-5. **Mass Assignment** — privilege escalation via unexpected fields
+1. **BOLA (Broken Object Level Authorization)** — Cross-account ID/resource swapping
+2. **Broken Authentication** — JWT validation flaws, signature bypass, and weak sessions
+3. **Excessive Data Exposure** — Identifying undocumented internal object leaks in API responses
+4. **Lack of Rate Limiting** — Automated burst probing against auth/sensitive routes
+5. **Mass Assignment** — Privilege escalation fuzzing with injected administrative fields
+
+---
 
 ## Architecture
 
@@ -43,16 +43,20 @@ This tool ingests an OpenAPI/Swagger spec (or captured traffic), builds a live m
                     └─────────────┘
 ```
 
+---
+
 ## Tech Stack
 
 | Layer | Choice |
 |---|---|
-| Backend / Engine | Python 3.11+, FastAPI |
-| Attack Layer | httpx (async), custom auth-swap & payload-mutation modules |
-| Frontend | React 18, Vite |
-| Reporting | CVSS v3.1 scoring, PDF/HTML export |
-| Storage | SQLite (dev) / PostgreSQL (prod) |
-| Test Infra | Docker Compose — vulnerable target APIs |
+| **Backend Engine** | Python 3.11+, FastAPI, Pydantic |
+| **Attack Layer** | httpx (Async HTTP), custom token mutation & payload injectors |
+| **Frontend** | React 18, Vite, Lucide Icons |
+| **Scoring & Reporting** | CVSS v3.1 scoring, Jinja2 / WeasyPrint (HTML/PDF export) |
+| **Storage** | SQLite (Dev) / PostgreSQL (Prod), SQLAlchemy async ORM |
+| **Testing Infrastructure** | Docker Compose (crAPI, vAPI, Petstore) |
+
+---
 
 ## Quick Start
 
@@ -60,23 +64,28 @@ This tool ingests an OpenAPI/Swagger spec (or captured traffic), builds a live m
 
 - Python 3.11+
 - Node.js 18+
-- Docker & Docker Compose (for test targets)
+- Docker & Docker Compose *(optional, for local vulnerable practice targets)*
 
-### Backend Setup
+### 1. Backend Setup
 
 ```bash
 cd backend
 python -m venv venv
+
 # Windows
-venv\Scripts\activate
-# Linux/Mac
+.\venv\Scripts\activate
+# Linux / macOS
 source venv/bin/activate
 
 pip install -r requirements.txt
+cp .env.example .env   # On Windows: copy .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend Setup
+- API Docs (Swagger UI): `http://localhost:8000/docs`
+- Health Check: `http://localhost:8000/health`
+
+### 2. Frontend Setup
 
 ```bash
 cd frontend
@@ -84,25 +93,49 @@ npm install
 npm run dev
 ```
 
-### Test Targets (Docker)
+- Web Interface: `http://localhost:5173`
+
+### 3. Vulnerable Test Targets (Docker)
 
 ```bash
 cd docker
-docker-compose up -d
+docker compose up -d
 ```
 
-This starts crAPI and vAPI locally for safe testing.
+| Target | Port | Type |
+|---|---|---|
+| **OWASP crAPI** | `8888` | Vulnerable e-commerce API |
+| **OWASP vAPI** | `7777` | OWASP API Top 10 target |
+| **Swagger Petstore** | `8081` | Clean API (False positive testing) |
 
-## Project Phases
+---
 
-- **Phase 1** — Spec Ingestion & Recon Engine (Weeks 1–4)
-- **Phase 2** — Vulnerability Detection & Exploit Engine (Weeks 5–9)
-- **Phase 3** — Reporting, Scoring & Polish (Weeks 10–12)
+## Project Roadmap
 
-## Legal & Ethical
+- [x] **Phase 1 — Spec Ingestion & Recon Engine**
+  - OpenAPI 3.x & Swagger 2.0 parser (JSON/YAML)
+  - Interactive attack surface endpoint map & filter console
+  - Authentication scheme detection (Bearer/JWT, API Key, Basic)
+- [ ] **Phase 2 — Vulnerability Detection & Exploit Engine**
+  - BOLA automated ID/token swap testing
+  - Broken Auth & JWT validation auditing
+  - Excessive Data Exposure response diffing
+  - Rate limiting burst probe
+  - Mass assignment privilege escalation fuzzing
+- [ ] **Phase 3 — Reporting & Scoring**
+  - Automated CVSS v3.1 vulnerability scoring
+  - Professional pentest-style PDF / HTML report generator
+  - Scan history and remediation guidance
 
-This tool is for **authorized testing only**. Never target production systems without explicit written authorization. The tool enforces an authorization checkbox before any scan starts.
+---
+
+## Legal & Ethical Disclaimer
+
+> [!WARNING]
+> This tool is strictly developed for **educational purposes, defensive auditing, and authorized penetration testing**. Only test systems you own or have explicit, written authorization to evaluate. The authors are not responsible for any misuse of this tool.
+
+---
 
 ## License
 
-MIT
+MIT License
