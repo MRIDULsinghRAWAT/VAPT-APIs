@@ -1,10 +1,10 @@
-# Automated VAPT for Web APIs — Project Status and Roadmap Report
+# Automated VAPT for Web APIs — Project Status and Capability Report
 
 ---
 
 ## 1. Project Overview
 
-**Automated VAPT for Web APIs** is an automated vulnerability assessment and penetration testing framework designed to ingest OpenAPI/Swagger specifications, map API attack surfaces, execute targeted dynamic exploits across OWASP API Security Top 10 vulnerabilities, correlate multi-stage exploit chains, and generate CVSS v3.1 scored penetration testing deliverables.
+**Automated VAPT for Web APIs** is an automated vulnerability assessment and penetration testing framework designed to ingest OpenAPI/Swagger specifications, map API attack surfaces, execute targeted dynamic exploits across OWASP API Security Top 10 vulnerabilities, correlate multi-stage exploit chains, persist historical scan vaults in SQLite/storage, and generate CVSS v3.1 scored penetration testing deliverables.
 
 ---
 
@@ -22,9 +22,10 @@
 | **Exploit Chaining Engine** | **Completed** | Correlates isolated atomic findings into composite kill-chains (e.g. BOLA ➔ Data Leak ➔ Account Takeover). |
 | **Interactive Security Diagrams** | **Completed** | Attack surface node graph, kill-chain flowchart sequence, OWASP risk heatmap, and security posture gauge scorecard. |
 | **CVSS v3.1 Scoring Calculator** | **Completed** | Standard CVSS v3.1 Base Vector string generation and score calculations (Critical, High, Medium, Low). |
+| **Persistent Database Vault** | **Completed** | Persistent storage for lifetime scan runs, historical findings, CVSS records, search filtering, and deletion controls. |
 | **Pentest Report Generator** | **Completed** | Exports formatted executive HTML/PDF penetration testing reports with PoC request/response snippets and remediation code. |
 | **Live Vulnerable Target Server** | **Completed** | Standalone FastAPI mock server (`mock_target.py`) running on port 8888 for local, zero-Docker network exploit testing. |
-| **Docker Test Environments** | **Completed** | Docker Compose configurations for OWASP crAPI, OWASP vAPI, and Swagger Petstore. |
+| **Sample Vulnerable Spec Library** | **Completed** | Includes official OWASP crAPI (`owasp-crapi-spec.json`), E-Commerce Fintech API, and base REST specs. |
 
 ---
 
@@ -46,15 +47,8 @@ npm run dev
 *Access interface at `http://localhost:5173`.*
 
 ### Step 3: Run Full VAPT Workflow
-1. Navigate to **Upload Spec** and load `samples/vulnerable-ecommerce-api.json`.
+1. Navigate to **Upload Spec** and load `samples/owasp-crapi-spec.json` or `samples/vulnerable-ecommerce-api.json`.
 2. Review mapped routes on the **Endpoint Map**.
 3. Open **Scan Console** and click **Fire Live Exploit Scan**.
 4. Inspect real-time network logs, interactive topology diagrams, and kill-chain flowcharts.
-5. Open **Reports** to export the client-ready HTML/PDF penetration testing report.
-
----
-
-## 4. Documentation References
-
-- [README.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/README.md) — Technical overview, system architecture, and setup instructions.
-- [INTERVIEW_PREP.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/INTERVIEW_PREP.md) — Comprehensive technical interview guide covering architecture decisions, bug deep-dives, and FAQ.
+5. Review **Database Vault** on the **Dashboard** and **Reports** tab to inspect historical records and export client-ready penetration testing deliverables.

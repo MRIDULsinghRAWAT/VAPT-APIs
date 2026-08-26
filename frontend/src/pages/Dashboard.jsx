@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 import {
   Shield,
@@ -7,18 +8,34 @@ import {
   ArrowRight,
   CheckCircle,
   Code,
+  Database,
+  Calendar,
+  Download,
 } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
 import SecurityDiagrams from '../components/SecurityDiagrams'
 
 export default function Dashboard() {
-  const { parsedSpec, latestFindings } = useAppContext()
+  const { parsedSpec, scans, latestFindings } = useAppContext()
+
+  const totalFindingsCount = scans.reduce((acc, s) => acc + (s.total_findings || 0), 0)
+  const lastScan = scans.length > 0 ? scans[0] : null
 
   return (
     <div>
       <div className="page-header">
-        <h1>Security Dashboard</h1>
-        <p>Real-time attack surface intelligence and automated pentest posture overview</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1>Security Dashboard</h1>
+            <p>Real-time attack surface intelligence and automated pentest posture overview</p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0f172a', border: '1px solid #1e293b', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.78rem', color: '#94a3b8' }}>
+            <Database size={14} style={{ color: 'var(--accent-cyan)' }} />
+            <span>Database Storage: </span>
+            <strong style={{ color: '#22c55e' }}>PERSISTED ({scans.length} Saved Scans)</strong>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -28,8 +45,8 @@ export default function Dashboard() {
             <Target size={24} />
           </div>
           <div>
-            <div className="stat-value">{parsedSpec ? 1 : 0}</div>
-            <div className="stat-label">Specs Loaded</div>
+            <div className="stat-value">{scans.length}</div>
+            <div className="stat-label">Total Scans Executed</div>
           </div>
         </div>
 
@@ -38,7 +55,7 @@ export default function Dashboard() {
             <Code size={24} />
           </div>
           <div>
-            <div className="stat-value">{parsedSpec?.total_endpoints || 0}</div>
+            <div className="stat-value">{parsedSpec?.total_endpoints || (lastScan?.total_endpoints || 0)}</div>
             <div className="stat-label">Endpoints Mapped</div>
           </div>
         </div>
@@ -48,18 +65,20 @@ export default function Dashboard() {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <div className="stat-value">{parsedSpec?.auth_coverage?.unprotected || 0}</div>
-            <div className="stat-label">Unprotected Endpoints</div>
+            <div className="stat-value">{totalFindingsCount}</div>
+            <div className="stat-label">Total Flaws Discovered</div>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-icon green">
-            <Shield size={24} />
+            <Activity size={24} />
           </div>
           <div>
-            <div className="stat-value">{parsedSpec?.auth_coverage?.protected || 0}</div>
-            <div className="stat-label">Protected Endpoints</div>
+            <div className="stat-value" style={{ fontSize: '1rem', marginTop: '0.2rem' }}>
+              {lastScan ? new Date(lastScan.created_at).toLocaleDateString() : '—'}
+            </div>
+            <div className="stat-label">Latest Assessment Date</div>
           </div>
         </div>
       </div>
@@ -102,6 +121,56 @@ export default function Dashboard() {
             Upload API Spec
             <ArrowRight size={16} />
           </Link>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          HISTORICAL SCANS FROM DATABASE
+          ───────────────────────────────────────────────────────────── */}
+      {scans.length > 0 && (
+        <div className="card" style={{ marginBottom: '1.5rem' }}>
+          <div className="card-header">
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Database size={18} style={{ color: 'var(--accent-cyan)' }} />
+              Historical Scan Records (Database Vault)
+            </h3>
+            <Link to="/reports" className="btn btn-secondary" style={{ fontSize: '0.78rem' }}>
+              View All Reports <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <div className="table-container" style={{ border: 'none' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Scan Title</th>
+                  <th>Target Host</th>
+                  <th>Execution Date</th>
+                  <th>Vulnerabilities</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scans.slice(0, 4).map((s) => (
+                  <tr key={s.id}>
+                    <td><strong>{s.name}</strong></td>
+                    <td><code>{s.target_url}</code></td>
+                    <td style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                      {new Date(s.created_at).toLocaleString()}
+                    </td>
+                    <td>
+                      <span className="badge badge-critical">
+                        {s.total_findings || 0} Vulnerabilities
+                      </span>
+                    </td>
+                    <td>
+                      <span className="badge badge-low">{s.status || 'completed'}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
