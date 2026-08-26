@@ -1,4 +1,4 @@
-# 🛡️ Automated VAPT for Web APIs
+# Automated VAPT for Web APIs
 
 > An Automated Vulnerability Assessment & Penetration Testing Framework for Web APIs
 
