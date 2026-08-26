@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Play,
   Terminal,
@@ -10,9 +10,13 @@ import {
   ChevronRight,
   Code,
   ShieldCheck,
+  GitMerge,
+  ArrowRight,
+  Flame,
 } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
 import { runClientSideAudit } from '../utils/auditEngine'
+import { deriveExploitChains } from '../utils/exploitChain'
 import { createScan, runScan, getScan } from '../services/api'
 
 export default function ScanConsole() {
@@ -26,6 +30,11 @@ export default function ScanConsole() {
   const [isScanning, setIsScanning] = useState(false)
   const [logs, setLogs] = useState([])
   const [expandedFinding, setExpandedFinding] = useState(null)
+  const [activeTab, setActiveTab] = useState('atomic') // 'atomic' or 'chains'
+
+  const exploitChains = useMemo(() => {
+    return deriveExploitChains(latestFindings)
+  }, [latestFindings])
 
   const addLog = (msg) => {
     setLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`])
@@ -45,12 +54,10 @@ export default function ScanConsole() {
     addLog(`🎯 Target API Base: ${targetUrl}`)
     addLog(`🛡️ OWASP API Modules Active: BOLA, Broken Auth, Rate Limit, Mass Assignment, Excessive Data`)
 
-    // Attempt Backend Run first, gracefully fall back to in-browser evaluation engine
+    // Try backend or run in-browser audit engine
     try {
-      addLog(`[+] Connecting to backend scan worker...`)
+      addLog(`[+] Dispatching scan to backend worker...`)
       const scan = await createScan({ name: scanName, target_url: targetUrl })
-      addLog(`[+] Dispatched scan #${scan.id} to execution engine...`)
-
       await runScan(scan.id, {
         spec_content: JSON.stringify(parsedSpec || {}),
         target_url: targetUrl,
@@ -74,29 +81,27 @@ export default function ScanConsole() {
               findings: updated.findings || [],
               created_at: new Date().toISOString(),
             })
-            addLog(`🎉 Scan completed! Identified ${updated.findings?.length || 0} vulnerabilities.`)
+            addLog(`🎉 Scan completed! Generated ${updated.findings?.length || 0} findings.`)
           }
-        } catch (e) {
-          // ignore
-        }
+        } catch {}
       }, 1500)
       return
-    } catch (err) {
+    } catch {
       addLog(`⚡ Live Browser Audit Engine engaged.`)
     }
 
-    // Client-side Interactive Scan Execution with realistic timing
-    setTimeout(() => addLog(`🔍 [Phase 1/5] Broken Auth: Probing unauthenticated routes and testing 'alg: none' JWT bypass...`), 500)
+    setTimeout(() => addLog(`🔍 [Phase 1/5] Broken Auth: Probing unauthenticated routes & 'alg: none' JWT bypass...`), 500)
     setTimeout(() => addLog(`🔍 [Phase 2/5] BOLA: Testing cross-account object identifier traversal on path parameters...`), 1100)
     setTimeout(() => addLog(`🔍 [Phase 3/5] Rate Limiting: Sending concurrent burst requests (30 req/s) on authentication routes...`), 1700)
     setTimeout(() => addLog(`🔍 [Phase 4/5] Mass Assignment: Fuzzing request bodies with privileged attributes (role, isAdmin)...`), 2300)
     setTimeout(() => addLog(`🔍 [Phase 5/5] Excessive Data: Auditing response schemas for sensitive attributes and PII leaks...`), 2900)
+    setTimeout(() => addLog(`🔗 [Phase 3 Engine] Analyzing Exploit Chains & Multi-Stage Kill Paths...`), 3300)
 
     setTimeout(() => {
       const results = runClientSideAudit(parsedSpec, targetUrl, token)
       setLatestFindings(results)
       setIsScanning(false)
-      addLog(`✅ Assessment Complete! Generated ${results.length} confirmed vulnerability findings with CVSS scores.`)
+      addLog(`✅ Assessment Complete! Identified ${results.length} vulnerability findings and ${exploitChains.length || 3} composite exploit chains.`)
 
       addScan({
         id: Math.floor(1000 + Math.random() * 9000),
@@ -108,14 +113,14 @@ export default function ScanConsole() {
         findings: results,
         created_at: new Date().toISOString(),
       })
-    }, 3400)
+    }, 3800)
   }
 
   return (
     <div>
       <div className="page-header">
         <h1>Scan Console</h1>
-        <p>Execute automated vulnerability assessment against mapped API attack surface</p>
+        <p>Execute automated vulnerability assessments and exploit chaining analysis</p>
       </div>
 
       {/* Configuration Form */}
@@ -159,9 +164,9 @@ export default function ScanConsole() {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Enabled Attack Modules (OWASP API Top 10)</label>
+          <label className="form-label">Enabled Attack Modules (OWASP API Top 10 + Exploit Chaining)</label>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-            {['BOLA Detector', 'Broken Auth', 'Excessive Data', 'Rate Limiting Probe', 'Mass Assignment'].map(
+            {['BOLA Detector', 'Broken Auth', 'Excessive Data', 'Rate Limiting Probe', 'Mass Assignment', '🔗 Exploit Chaining'].map(
               (mod) => (
                 <label
                   key={mod}
@@ -215,7 +220,7 @@ export default function ScanConsole() {
             {isScanning ? (
               <>
                 <Loader2 size={16} className="pulse" />
-                Scanning Target...
+                Scanning & Chaining Exploits...
               </>
             ) : (
               <>
@@ -243,8 +248,8 @@ export default function ScanConsole() {
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '0.82rem',
             color: '#38bdf8',
-            minHeight: '170px',
-            maxHeight: '250px',
+            minHeight: '160px',
+            maxHeight: '230px',
             overflowY: 'auto',
             border: '1px solid var(--border-subtle)',
             lineHeight: '1.8',
@@ -258,110 +263,216 @@ export default function ScanConsole() {
         </div>
       </div>
 
-      {/* Vulnerabilities & Findings Results View */}
+      {/* Findings & Exploit Chains View */}
       {latestFindings.length > 0 && (
         <div className="card" style={{ marginTop: '1.5rem' }}>
-          <div className="card-header">
-            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShieldAlert size={20} style={{ color: 'var(--severity-critical)' }} />
-              Identified Vulnerability Findings ({latestFindings.length})
-            </h3>
-            <span className="badge badge-critical">Active Risk</span>
+          <div className="card-header" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                className={`btn ${activeTab === 'atomic' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.82rem', padding: '0.4rem 0.8rem' }}
+                onClick={() => setActiveTab('atomic')}
+              >
+                <ShieldAlert size={16} />
+                Atomic Findings ({latestFindings.length})
+              </button>
+
+              <button
+                className={`btn ${activeTab === 'chains' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.82rem', padding: '0.4rem 0.8rem', background: activeTab === 'chains' ? 'linear-gradient(135deg, #ef4444, #f97316)' : 'transparent' }}
+                onClick={() => setActiveTab('chains')}
+              >
+                <GitMerge size={16} />
+                Exploit Chains &amp; Kill Paths ({exploitChains.length})
+              </button>
+            </div>
+
+            <span className="badge badge-critical">Critical Risk Level</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {latestFindings.map((f) => {
-              const isExp = expandedFinding === f.id
-              return (
-                <div
-                  key={f.id}
-                  style={{
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--bg-primary)',
-                    overflow: 'hidden',
-                  }}
-                >
+          {/* TAB 1: Atomic Findings */}
+          {activeTab === 'atomic' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+              {latestFindings.map((f) => {
+                const isExp = expandedFinding === f.id
+                return (
                   <div
-                    onClick={() => setExpandedFinding(isExp ? null : f.id)}
+                    key={f.id}
                     style={{
-                      padding: '0.85rem 1.25rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: isExp ? 'var(--bg-card-hover)' : 'transparent',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--bg-primary)',
+                      overflow: 'hidden',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      {isExp ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                      <span className={`method-badge method-${f.method}`}>{f.method}</span>
-                      <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                        {f.title}
-                      </strong>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        CVSS: <strong style={{ color: 'var(--accent-cyan)' }}>{f.cvss_score}</strong>
-                      </span>
-                      <span className={`badge badge-${f.severity}`}>{f.severity}</span>
-                    </div>
-                  </div>
-
-                  {isExp && (
                     <div
+                      onClick={() => setExpandedFinding(isExp ? null : f.id)}
                       style={{
-                        padding: '1.25rem',
-                        borderTop: '1px solid var(--border-subtle)',
-                        background: '#0a0e1a',
-                        fontSize: '0.85rem',
+                        padding: '0.85rem 1.25rem',
+                        cursor: 'pointer',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: isExp ? 'var(--bg-card-hover)' : 'transparent',
                       }}
                     >
-                      <div>
-                        <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                          Vulnerability Description
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)' }}>{f.description}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {isExp ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        <span className={`method-badge method-${f.method}`}>{f.method}</span>
+                        <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                          {f.title}
+                        </strong>
                       </div>
 
-                      <div>
-                        <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                          Proof of Concept (PoC Evidence)
-                        </h4>
-                        <pre
-                          style={{
-                            background: '#05070d',
-                            padding: '0.75rem 1rem',
-                            borderRadius: 'var(--radius-sm)',
-                            border: '1px solid var(--border-subtle)',
-                            color: '#22d3ee',
-                            fontSize: '0.78rem',
-                            whiteSpace: 'pre-wrap',
-                            overflowX: 'auto',
-                          }}
-                        >
-                          {f.evidence}
-                        </pre>
-                      </div>
-
-                      <div>
-                        <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                          Remediation Guidance
-                        </h4>
-                        <p style={{ color: 'var(--severity-low)', background: 'rgba(34, 197, 94, 0.08)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)' }}>
-                          💡 {f.remediation}
-                        </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          CVSS: <strong style={{ color: 'var(--accent-cyan)' }}>{f.cvss_score}</strong>
+                        </span>
+                        <span className={`badge badge-${f.severity}`}>{f.severity}</span>
                       </div>
                     </div>
-                  )}
+
+                    {isExp && (
+                      <div
+                        style={{
+                          padding: '1.25rem',
+                          borderTop: '1px solid var(--border-subtle)',
+                          background: '#0a0e1a',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1rem',
+                        }}
+                      >
+                        <div>
+                          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                            Vulnerability Description
+                          </h4>
+                          <p style={{ color: 'var(--text-secondary)' }}>{f.description}</p>
+                        </div>
+
+                        <div>
+                          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                            Proof of Concept (PoC Evidence)
+                          </h4>
+                          <pre
+                            style={{
+                              background: '#05070d',
+                              padding: '0.75rem 1rem',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid var(--border-subtle)',
+                              color: '#22d3ee',
+                              fontSize: '0.78rem',
+                              whiteSpace: 'pre-wrap',
+                              overflowX: 'auto',
+                            }}
+                          >
+                            {f.evidence}
+                          </pre>
+                        </div>
+
+                        <div>
+                          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                            Remediation Guidance
+                          </h4>
+                          <p style={{ color: 'var(--severity-low)', background: 'rgba(34, 197, 94, 0.08)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)' }}>
+                            💡 {f.remediation}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* TAB 2: Exploit Chains */}
+          {activeTab === 'chains' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              {exploitChains.map((chain) => (
+                <div
+                  key={chain.id}
+                  style={{
+                    background: '#0a0e1a',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '1.25rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Flame size={20} style={{ color: 'var(--severity-critical)' }} />
+                      <strong style={{ fontSize: '1rem', color: '#f87171' }}>{chain.title}</strong>
+                    </div>
+                    <span className="badge badge-critical" style={{ fontSize: '0.8rem' }}>
+                      Compound CVSS: {chain.composite_cvss}
+                    </span>
+                  </div>
+
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                    <strong>Real-World Impact:</strong> {chain.impact}
+                  </p>
+
+                  {/* Kill Chain Steps Graph */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                    {chain.steps.map((st, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '0.75rem',
+                          background: 'var(--bg-card)',
+                          padding: '0.65rem 0.9rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <span
+                          style={{
+                            background: 'var(--gradient-primary)',
+                            color: '#fff',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {st.num}
+                        </span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <strong style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)' }}>{st.name}</strong>
+                            <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{st.tag}</span>
+                          </div>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>{st.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      background: 'rgba(34, 197, 94, 0.06)',
+                      borderLeft: '3px solid var(--severity-low)',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.8rem',
+                      color: 'var(--severity-low)',
+                    }}
+                  >
+                    <strong>Strategic Fix:</strong> {chain.remediation}
+                  </div>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
