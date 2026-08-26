@@ -179,8 +179,9 @@ pytest -v
 
 ## Documentation References
 
-- [PROJECT_STATUS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/PROJECT_STATUS.md) — Detailed capability matrix and execution roadmap.
-- [INTERVIEW_PREP.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/INTERVIEW_PREP.md) — Comprehensive technical interview guide covering architecture decisions, fundamentals, bug deep-dives, and FAQ.
+- [IN_DEPTH_TECHNICAL_DOCS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/IN_DEPTH_TECHNICAL_DOCS.md) — Comprehensive, code-level architectural and mathematical engineering documentation.
+- [INTERVIEW_PREP.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/INTERVIEW_PREP.md) — Technical interview guide covering pitches, fundamentals, bug deep-dives, and FAQ.
+- [PROJECT_STATUS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/PROJECT_STATUS.md) — Detailed capability matrix, sample library, and execution roadmap.
 
 ---
 
