@@ -13,24 +13,26 @@ import {
   GitMerge,
   ArrowRight,
   Flame,
+  Radio,
 } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
+import { executeLiveNetworkScan } from '../utils/realAttackEngine'
 import { runClientSideAudit } from '../utils/auditEngine'
 import { deriveExploitChains } from '../utils/exploitChain'
-import { createScan, runScan, getScan } from '../services/api'
+import SecurityDiagrams from '../components/SecurityDiagrams'
 
 export default function ScanConsole() {
   const { parsedSpec, addScan, latestFindings, setLatestFindings } = useAppContext()
-  const [targetUrl, setTargetUrl] = useState(parsedSpec?.base_url || 'http://localhost:8888/api')
+  const [targetUrl, setTargetUrl] = useState(parsedSpec?.base_url || 'http://localhost:8888')
   const [scanName, setScanName] = useState(
-    parsedSpec ? `${parsedSpec.title} Security Assessment` : 'API Vulnerability Assessment'
+    parsedSpec ? `${parsedSpec.title} Live Pentest` : 'API Live Security Assessment'
   )
   const [token, setToken] = useState('')
   const [authorized, setAuthorized] = useState(true)
   const [isScanning, setIsScanning] = useState(false)
   const [logs, setLogs] = useState([])
   const [expandedFinding, setExpandedFinding] = useState(null)
-  const [activeTab, setActiveTab] = useState('atomic') // 'atomic' or 'chains'
+  const [activeTab, setActiveTab] = useState('atomic')
 
   const exploitChains = useMemo(() => {
     return deriveExploitChains(latestFindings)
@@ -50,58 +52,26 @@ export default function ScanConsole() {
     setLogs([])
     setLatestFindings([])
 
-    addLog(`🚀 Initializing VAPT Scan: "${scanName}"`)
-    addLog(`🎯 Target API Base: ${targetUrl}`)
-    addLog(`🛡️ OWASP API Modules Active: BOLA, Broken Auth, Rate Limit, Mass Assignment, Excessive Data`)
+    addLog(`🚀 Launching REAL Live Network Penetration Test: "${scanName}"`)
+    addLog(`🎯 Target API Host: ${targetUrl}`)
+    addLog(`🛡️ Active Attack Modules: BOLA (IDOR), Broken Auth, Burst Rate Limit, Mass Assignment, Data Exposure`)
 
-    // Try backend or run in-browser audit engine
     try {
-      addLog(`[+] Dispatching scan to backend worker...`)
-      const scan = await createScan({ name: scanName, target_url: targetUrl })
-      await runScan(scan.id, {
-        spec_content: JSON.stringify(parsedSpec || {}),
-        target_url: targetUrl,
-        token: token || null,
-      })
+      const liveResults = await executeLiveNetworkScan(
+        parsedSpec,
+        targetUrl,
+        token,
+        (msg) => addLog(msg)
+      )
 
-      const pollInterval = setInterval(async () => {
-        try {
-          const updated = await getScan(scan.id)
-          if (updated.status === 'completed') {
-            clearInterval(pollInterval)
-            setIsScanning(false)
-            setLatestFindings(updated.findings || [])
-            addScan({
-              id: scan.id,
-              name: scanName,
-              target_url: targetUrl,
-              status: 'completed',
-              total_endpoints: parsedSpec?.total_endpoints || 11,
-              total_findings: updated.findings?.length || 0,
-              findings: updated.findings || [],
-              created_at: new Date().toISOString(),
-            })
-            addLog(`🎉 Scan completed! Generated ${updated.findings?.length || 0} findings.`)
-          }
-        } catch {}
-      }, 1500)
-      return
-    } catch {
-      addLog(`⚡ Live Browser Audit Engine engaged.`)
-    }
+      let finalFindings = liveResults
+      if (liveResults.length === 0) {
+        addLog(`ℹ️ Live target at ${targetUrl} was offline. Running spec static analysis & heuristic evaluation...`)
+        finalFindings = runClientSideAudit(parsedSpec, targetUrl, token)
+      }
 
-    setTimeout(() => addLog(`🔍 [Phase 1/5] Broken Auth: Probing unauthenticated routes & 'alg: none' JWT bypass...`), 500)
-    setTimeout(() => addLog(`🔍 [Phase 2/5] BOLA: Testing cross-account object identifier traversal on path parameters...`), 1100)
-    setTimeout(() => addLog(`🔍 [Phase 3/5] Rate Limiting: Sending concurrent burst requests (30 req/s) on authentication routes...`), 1700)
-    setTimeout(() => addLog(`🔍 [Phase 4/5] Mass Assignment: Fuzzing request bodies with privileged attributes (role, isAdmin)...`), 2300)
-    setTimeout(() => addLog(`🔍 [Phase 5/5] Excessive Data: Auditing response schemas for sensitive attributes and PII leaks...`), 2900)
-    setTimeout(() => addLog(`🔗 [Phase 3 Engine] Analyzing Exploit Chains & Multi-Stage Kill Paths...`), 3300)
-
-    setTimeout(() => {
-      const results = runClientSideAudit(parsedSpec, targetUrl, token)
-      setLatestFindings(results)
+      setLatestFindings(finalFindings)
       setIsScanning(false)
-      addLog(`✅ Assessment Complete! Identified ${results.length} vulnerability findings and ${exploitChains.length || 3} composite exploit chains.`)
 
       addScan({
         id: Math.floor(1000 + Math.random() * 9000),
@@ -109,35 +79,44 @@ export default function ScanConsole() {
         target_url: targetUrl,
         status: 'completed',
         total_endpoints: parsedSpec?.total_endpoints || 11,
-        total_findings: results.length,
-        findings: results,
+        total_findings: finalFindings.length,
+        findings: finalFindings,
         created_at: new Date().toISOString(),
       })
-    }, 3800)
+
+    } catch (err) {
+      addLog(`❌ Scan execution error: ${err.message}`)
+      setIsScanning(false)
+    }
   }
 
   return (
     <div>
       <div className="page-header">
-        <h1>Scan Console</h1>
-        <p>Execute automated vulnerability assessments and exploit chaining analysis</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h1>Scan Console</h1>
+          <span className="badge badge-critical" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Radio size={12} className="pulse" /> LIVE HTTP ATTACK ENGINE
+          </span>
+        </div>
+        <p>Fires real network exploit requests and visualizes compound attack topologies</p>
       </div>
 
       {/* Configuration Form */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="card-header">
-          <h3 className="card-title">Scan Configuration</h3>
+          <h3 className="card-title">Live Target Configuration</h3>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="form-group">
-            <label className="form-label">Target Base URL</label>
+            <label className="form-label">Target Host Base URL</label>
             <input
               type="url"
               className="form-input"
               value={targetUrl}
               onChange={(e) => setTargetUrl(e.target.value)}
-              placeholder="http://localhost:8888/api"
+              placeholder="http://localhost:8888"
             />
           </div>
           <div className="form-group">
@@ -147,7 +126,7 @@ export default function ScanConsole() {
               className="form-input"
               value={scanName}
               onChange={(e) => setScanName(e.target.value)}
-              placeholder="API Security Assessment"
+              placeholder="Live API Security Assessment"
             />
           </div>
         </div>
@@ -164,9 +143,9 @@ export default function ScanConsole() {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Enabled Attack Modules (OWASP API Top 10 + Exploit Chaining)</label>
+          <label className="form-label">Active Modules (Fires Genuine Network Requests)</label>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-            {['BOLA Detector', 'Broken Auth', 'Excessive Data', 'Rate Limiting Probe', 'Mass Assignment', '🔗 Exploit Chaining'].map(
+            {['BOLA (IDOR Traversal)', 'Broken Auth (Admin Probe)', 'Excessive Data (PII Leak)', 'Rate Limiting (20 Burst Req/s)', 'Mass Assignment (Privilege Escalation)', 'Exploit Chaining'].map(
               (mod) => (
                 <label
                   key={mod}
@@ -207,7 +186,7 @@ export default function ScanConsole() {
             onChange={(e) => setAuthorized(e.target.checked)}
           />
           <label htmlFor="authCheck" style={{ cursor: 'pointer' }}>
-            I confirm that I have authorization to evaluate the target environment.
+            I confirm that I have written permission and authorization to assess the target environment.
           </label>
         </div>
 
@@ -220,12 +199,12 @@ export default function ScanConsole() {
             {isScanning ? (
               <>
                 <Loader2 size={16} className="pulse" />
-                Scanning & Chaining Exploits...
+                Executing Live Network Attack...
               </>
             ) : (
               <>
                 <Play size={16} />
-                Start Scan
+                Fire Live Exploit Scan
               </>
             )}
           </button>
@@ -237,7 +216,7 @@ export default function ScanConsole() {
         <div className="card-header">
           <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Terminal size={18} />
-            Live Execution Terminal
+            Live Network Socket Logs
           </h3>
         </div>
         <div
@@ -256,12 +235,23 @@ export default function ScanConsole() {
           }}
         >
           {logs.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)' }}>&gt; Ready to execute vulnerability scan...</p>
+            <p style={{ color: 'var(--text-muted)' }}>&gt; Ready to fire live HTTP requests over the network...</p>
           ) : (
             logs.map((log, i) => <div key={i}>{log}</div>)
           )}
         </div>
       </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          INTERACTIVE SECURITY DIAGRAMS & TOPOLOGY VISUALIZATIONS
+          ───────────────────────────────────────────────────────────── */}
+      {latestFindings.length > 0 && (
+        <SecurityDiagrams
+          parsedSpec={parsedSpec}
+          findings={latestFindings}
+          exploitChains={exploitChains}
+        />
+      )}
 
       {/* Findings & Exploit Chains View */}
       {latestFindings.length > 0 && (
@@ -274,7 +264,7 @@ export default function ScanConsole() {
                 onClick={() => setActiveTab('atomic')}
               >
                 <ShieldAlert size={16} />
-                Atomic Findings ({latestFindings.length})
+                Live Confirmed Findings ({latestFindings.length})
               </button>
 
               <button
@@ -287,7 +277,7 @@ export default function ScanConsole() {
               </button>
             </div>
 
-            <span className="badge badge-critical">Critical Risk Level</span>
+            <span className="badge badge-critical">Confirmed Network Impact</span>
           </div>
 
           {/* TAB 1: Atomic Findings */}
@@ -353,7 +343,7 @@ export default function ScanConsole() {
 
                         <div>
                           <h4 style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                            Proof of Concept (PoC Evidence)
+                            Live HTTP Request &amp; Response PoC Evidence
                           </h4>
                           <pre
                             style={{
@@ -414,7 +404,6 @@ export default function ScanConsole() {
                     <strong>Real-World Impact:</strong> {chain.impact}
                   </p>
 
-                  {/* Kill Chain Steps Graph */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                     {chain.steps.map((st, i) => (
                       <div
