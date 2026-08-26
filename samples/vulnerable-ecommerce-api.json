@@ -1,0 +1,266 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ShopVulnerable E-Commerce & Financial API",
+    "version": "2.4.0",
+    "description": "Vulnerable target API specification containing realistic OWASP API Security Top 10 vulnerabilities (BOLA, Broken Auth, Mass Assignment, Excessive Data Exposure, Lack of Rate Limiting)."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8888/api/v2",
+      "description": "Local Vulnerable Test Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer authentication token."
+      }
+    },
+    "schemas": {
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1042 },
+          "full_name": { "type": "string", "example": "John Doe" },
+          "email": { "type": "string", "example": "john.doe@company.org" },
+          "role": { "type": "string", "example": "customer" },
+          "ssn": { "type": "string", "example": "999-12-3456" },
+          "credit_card": { "type": "string", "example": "4111-2222-3333-4444" },
+          "password_hash": { "type": "string", "example": "$2b$12$e8uq4L9rI...secret" },
+          "is_admin": { "type": "boolean", "example": false },
+          "balance": { "type": "number", "example": 2500.50 }
+        }
+      },
+      "OrderDetails": {
+        "type": "object",
+        "properties": {
+          "order_id": { "type": "integer", "example": 8921 },
+          "user_id": { "type": "integer", "example": 1042 },
+          "items": { "type": "array", "items": { "type": "string" } },
+          "total_amount": { "type": "number", "example": 120.00 },
+          "shipping_address": { "type": "string", "example": "221B Baker St, London" },
+          "payment_token": { "type": "string", "example": "tok_visa_live_secret_99812" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user and receive JWT",
+        "tags": ["Authentication"],
+        "security": [],
+        "description": "Vulnerable to Brute-force / Missing Rate Limiting.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "example": "victim@target.com" },
+                  "password": { "type": "string", "example": "Password123" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string" },
+                    "user_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-otp": {
+      "post": {
+        "summary": "Verify 4-digit SMS OTP",
+        "tags": ["Authentication"],
+        "security": [],
+        "description": "Vulnerable to Lack of Rate Limiting (Brute-forceable 4-digit OTP code).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone": { "type": "string", "example": "+15550199" },
+                  "otp_code": { "type": "string", "example": "1234" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OTP verified" }
+        }
+      }
+    },
+    "/users/{userId}/profile": {
+      "get": {
+        "summary": "Get user profile by User ID",
+        "tags": ["User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "description": "Vulnerable to BOLA (API1:2023) and Excessive Data Exposure (API3:2023).",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Target user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile object containing PII",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user profile",
+        "tags": ["User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "description": "Vulnerable to Mass Assignment (API6:2023). Allows injecting 'is_admin': true and 'balance'.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "full_name": { "type": "string" },
+                  "email": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated" }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "summary": "Fetch order details",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "description": "Vulnerable to BOLA & IDOR (cross-tenant order inspection).",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details with payment token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetails" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallets/{walletId}/transfer": {
+      "post": {
+        "summary": "Transfer funds between wallets",
+        "tags": ["Payments & Wallets"],
+        "security": [{ "bearerAuth": [] }],
+        "description": "Vulnerable to BOLA on source wallet ID.",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "destination_wallet_id": { "type": "integer" },
+                  "amount": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Transfer executed" }
+        }
+      }
+    },
+    "/admin/system/audit-logs": {
+      "get": {
+        "summary": "Export system audit logs",
+        "tags": ["Administration"],
+        "security": [],
+        "description": "Vulnerable to Broken Authentication (API2:2023). Admin endpoint accessible without credentials.",
+        "responses": {
+          "200": { "description": "Raw system logs" }
+        }
+      }
+    },
+    "/admin/users/grant-role": {
+      "post": {
+        "summary": "Elevate user permissions",
+        "tags": ["Administration"],
+        "security": [],
+        "description": "Vulnerable to Unprotected Admin Action.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": { "type": "integer" },
+                  "role": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Role granted" }
+        }
+      }
+    }
+  }
+}

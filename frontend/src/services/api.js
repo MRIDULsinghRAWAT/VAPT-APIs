@@ -31,8 +31,8 @@ export async function getScan(scanId) {
   return res.data
 }
 
-export async function runScan(scanId) {
-  const res = await api.post(`/scans/${scanId}/run`)
+export async function runScan(scanId, payload) {
+  const res = await api.post(`/scans/${scanId}/run`, payload)
   return res.data
 }
 

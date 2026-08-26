@@ -5,9 +5,24 @@ const AppContext = createContext(null)
 export function AppProvider({ children }) {
   const [parsedSpec, setParsedSpec] = useState(null)
   const [scans, setScans] = useState([])
+  const [latestFindings, setLatestFindings] = useState([])
+
+  const addScan = (newScan) => {
+    setScans((prev) => [newScan, ...prev])
+  }
 
   return (
-    <AppContext.Provider value={{ parsedSpec, setParsedSpec, scans, setScans }}>
+    <AppContext.Provider
+      value={{
+        parsedSpec,
+        setParsedSpec,
+        scans,
+        setScans,
+        addScan,
+        latestFindings,
+        setLatestFindings,
+      }}
+    >
       {children}
     </AppContext.Provider>
   )
