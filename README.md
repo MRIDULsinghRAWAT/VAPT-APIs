@@ -1,6 +1,6 @@
 # Automated Vulnerability Assessment and Penetration Testing Framework for Web APIs
 
-An automated, spec-aware security assessment framework designed to ingest OpenAPI/Swagger specifications, map API attack surfaces, execute targeted dynamic exploits across OWASP API Security Top 10 vulnerabilities, correlate multi-stage exploit chains, and generate CVSS v3.1 scored penetration testing deliverables.
+An automated, spec-aware security assessment framework designed to ingest OpenAPI/Swagger specifications, map API attack surfaces, execute targeted dynamic exploits across OWASP API Security Top 10 vulnerabilities, correlate multi-stage exploit chains, persist historical audit records, and generate CVSS v3.1 scored penetration testing deliverables.
 
 ---
 
@@ -8,7 +8,7 @@ An automated, spec-aware security assessment framework designed to ingest OpenAP
 
 Modern cloud architectures have transitioned their primary attack surface to the REST/GraphQL API layer. Traditional web application vulnerability scanners often rely on HTML crawling and heuristics tailored for monolithic web pages, frequently failing to parse modern API specifications, object-level authorization models, or JSON-serialized business logic.
 
-This framework bridges that gap by implementing a spec-aware recon and exploit engine. It ingests machine-readable API contracts (OpenAPI 3.x / Swagger 2.0), constructs structured endpoint maps, actively executes targeted payloads against live endpoints, captures real HTTP status/payload diffs as proof-of-concept evidence, chains interrelated findings into full kill paths, and exports client-ready penetration testing reports.
+This framework bridges that gap by implementing a spec-aware recon and exploit engine. It ingests machine-readable API contracts (OpenAPI 3.x / Swagger 2.0), constructs structured endpoint maps, actively executes targeted payloads against live endpoints, captures real HTTP status and payload diffs as proof-of-concept evidence, chains interrelated findings into full kill paths, stores audit history in a persistent database vault, and exports client-ready penetration testing reports.
 
 ---
 
@@ -42,7 +42,7 @@ This framework bridges that gap by implementing a spec-aware recon and exploit e
                                      |
                              +-------v-------+
                              | SQLite / DB   |
-                             | - Scan Runs   |
+                             | - Scan Vault  |
                              | - Findings    |
                              +---------------+
 ```
@@ -61,7 +61,7 @@ This framework bridges that gap by implementing a spec-aware recon and exploit e
 - **Broken Object Level Authorization (API1:2023)**: Executes object identifier traversal and dual-account token swapping to verify cross-tenant access boundaries.
 - **Broken Authentication (API2:2023)**: Probes unauthenticated administrative routes and crafts tokens with the `none` algorithm to test cryptographic signature enforcement.
 - **Excessive Data Exposure (API3:2023)**: Compares live response payloads against expected DTO schemas and scans for leaked sensitive attributes (passwords, tokens, SSNs, credit card numbers).
-- **Unrestricted Resource Consumption / Missing Rate Limiting (API4:2023)**: Dispatches high-velocity burst requests (20–30 req/s) to authentication/OTP routes to detect missing HTTP 429 throttling.
+- **Unrestricted Resource Consumption / Missing Rate Limiting (API4:2023)**: Dispatches high-velocity burst requests (20-30 req/s) to authentication/OTP routes to detect missing HTTP 429 throttling.
 - **Mass Assignment (API6:2023)**: Injects non-whitelisted administrative attributes (`is_admin: true`, `role: admin`, elevated account balances) into JSON mutation requests.
 
 ### 3. Exploit Chaining and Kill-Chain Analysis
@@ -77,8 +77,9 @@ This framework bridges that gap by implementing a spec-aware recon and exploit e
 - **OWASP API Risk Heatmap**: Exposure breakdown by vulnerability category.
 - **Security Posture Scorecard**: Gauge index (0-100) reflecting overall perimeter posture.
 
-### 5. Automated Pentest Reporting
-- Generates downloadable HTML/PDF deliverables with Executive Summaries, Risk Matrix, PoC Request/Response snippets, and developer patch guidelines.
+### 5. Persistent Database Vault & Reporting
+- **Historical Audit Vault**: Stores completed scans, findings, CVSS scores, timestamps, and PoC evidence in an asynchronous SQLite database.
+- **Automated Pentest Reporting**: Generates downloadable HTML/PDF deliverables with Executive Summaries, Risk Matrix, PoC Request/Response snippets, and developer patch guidelines.
 
 ---
 
@@ -156,6 +157,15 @@ docker compose up -d
 
 ---
 
+## Available Sample Specifications
+
+Ready-to-test specifications located in `samples/`:
+- `samples/owasp-crapi-spec.json`: Official OWASP crAPI benchmark (20+ endpoints covering BOLA, vehicle IDOR, OTP brute force).
+- `samples/vulnerable-ecommerce-api.json`: E-Commerce/Banking API specification targeting all 5 implemented OWASP vulnerability classes.
+- `samples/sample-api-spec.json`: Lightweight REST API baseline for basic parsing and mapping verification.
+
+---
+
 ## Verification and Testing
 
 Execute the automated test suite covering OpenAPI 3.x and Swagger 2.0 parsers:
@@ -169,8 +179,14 @@ pytest -v
 
 ## Documentation References
 
-- [PROJECT_STATUS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/PROJECT_STATUS.md) — Comprehensive technical capability matrix and status overview.
-- [INTERVIEW_PREP.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/INTERVIEW_PREP.md) — Technical interview guide covering architecture decisions, bug deep-dives, and FAQ.
+- [PROJECT_STATUS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/PROJECT_STATUS.md) — Detailed capability matrix and execution roadmap.
+- [INTERVIEW_PREP.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/INTERVIEW_PREP.md) — Comprehensive technical interview guide covering architecture decisions, fundamentals, bug deep-dives, and FAQ.
+
+---
+
+## Ethical and Legal Boundaries
+
+This tool is strictly developed for authorized security assessments, defensive engineering, and academic evaluation. Scanning targets without prior explicit written permission from the system owner is illegal and violates computer misuse regulations.
 
 ---
 
