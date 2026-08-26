@@ -1,0 +1,65 @@
+# ──────────────────────────────────────────────
+# Docker Compose — Vulnerable Test Target APIs
+# ──────────────────────────────────────────────
+# Run: docker-compose up -d
+# Stop: docker-compose down
+#
+# ONLY for local testing — never expose to the internet.
+# ──────────────────────────────────────────────
+
+version: "3.9"
+
+services:
+  # ── OWASP crAPI (Completely Ridiculous API) ──
+  # Vulnerable e-commerce API — BOLA, Mass Assignment built in
+  # Docs: https://github.com/OWASP/crAPI
+  crapi:
+    image: crapi/crapi:latest
+    container_name: vapt-crapi
+    ports:
+      - "8888:8888"     # crAPI web
+      - "8025:8025"     # Mailhog (email service)
+    environment:
+      - DB_HOST=crapi-db
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      - DB_NAME=crapi
+    depends_on:
+      - crapi-db
+    restart: unless-stopped
+
+  crapi-db:
+    image: postgres:14-alpine
+    container_name: vapt-crapi-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: crapi
+    volumes:
+      - crapi-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ── OWASP vAPI (Vulnerable API) ──
+  # Focused on OWASP API Top 10 categories
+  # Docs: https://github.com/roottusk/vapi
+  vapi:
+    image: roottusk/vapi:latest
+    container_name: vapt-vapi
+    ports:
+      - "7777:80"
+    restart: unless-stopped
+
+  # ── Swagger Petstore (clean API — false positive testing) ──
+  # NOT vulnerable — use to verify the tool doesn't flag clean APIs
+  petstore:
+    image: swaggerapi/petstore3:latest
+    container_name: vapt-petstore
+    ports:
+      - "8081:8080"
+    environment:
+      - SWAGGER_BASE_PATH=/v3
+    restart: unless-stopped
+
+volumes:
+  crapi-db-data:
