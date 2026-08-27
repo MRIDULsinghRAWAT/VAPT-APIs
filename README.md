@@ -22,6 +22,7 @@ An automated, spec-aware security assessment framework that ingests **OpenAPI/Sw
 
 - [Technical Overview](#technical-overview)
 - [System Architecture](#system-architecture)
+- [Screenshots & Visualizations](#screenshots--visualizations)
 - [Core Capabilities](#core-capabilities)
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
@@ -98,6 +99,30 @@ This framework bridges that gap by implementing a **spec-aware reconnaissance an
                     │  • PoC Evidence    │
                     └───────────────────┘
 ```
+
+---
+
+## Screenshots & Visualizations
+
+### Dynamic Attack Topology & Microservice Map
+*Live attack graph auto-generated from parsed specifications, illustrating compromised and secure routes:*
+
+![Attack Surface Topology - DVWS Target](screenshots/topology-dvws.png)
+
+### Multi-Target Assessment & Topology Clustering
+*Adaptive clustering on varying targets (e.g., VAmPI target displaying verified secure vs breached services):*
+
+![Attack Surface Topology - VAmPI Target](screenshots/topology-vampi.png)
+
+### OWASP Risk Heatmap & Confirmed Vulnerability Feed
+*Live category distribution bars and detailed finding cards with CVSS ratings:*
+
+![Risk Heatmap and Findings Feed](screenshots/risk-heatmap-findings.png)
+
+### Historical Audit Vault & Dynamic Security Posture Scorecard
+*Lifetime scan ledger with calculated 0-100 posture index and CIA threat impact summary:*
+
+![Historical Dashboard and Posture Scorecard](screenshots/dashboard-scorecard.png)
 
 ---
 
