@@ -1,85 +1,150 @@
-# Automated Vulnerability Assessment and Penetration Testing Framework for Web APIs
+<div align="center">
 
-An automated, spec-aware security assessment framework designed to ingest OpenAPI/Swagger specifications, map API attack surfaces, execute targeted dynamic exploits across OWASP API Security Top 10 vulnerabilities, correlate multi-stage exploit chains, persist historical audit records, and generate CVSS v3.1 scored penetration testing deliverables.
+# Automated VAPT Framework for Web APIs
+
+**Spec-Aware Vulnerability Assessment & Penetration Testing Engine**
+
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![OWASP](https://img.shields.io/badge/OWASP_API_Top_10-000000?style=for-the-badge&logo=owasp&logoColor=white)](https://owasp.org/API-Security/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+An automated, spec-aware security assessment framework that ingests **OpenAPI/Swagger** specifications, maps API attack surfaces, executes targeted dynamic exploits across **OWASP API Security Top 10** vulnerabilities, correlates multi-stage exploit chains, persists historical audit records, and generates **CVSS v3.1** scored penetration testing deliverables.
+
+[Getting Started](#-quick-start) · [Architecture](#-system-architecture) · [Attack Modules](#-active-vulnerability-audit-modules) · [Sample Library](#-sample-specification-library) · [Documentation](#-documentation)
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Technical Overview](#technical-overview)
+- [System Architecture](#system-architecture)
+- [Core Capabilities](#core-capabilities)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Sample Specification Library](#sample-specification-library)
+- [Testing & Verification](#testing--verification)
+- [Documentation](#documentation)
+- [Ethical & Legal Notice](#ethical--legal-notice)
+- [License](#license)
 
 ---
 
 ## Technical Overview
 
-Modern cloud architectures have transitioned their primary attack surface to the REST/GraphQL API layer. Traditional web application vulnerability scanners often rely on HTML crawling and heuristics tailored for monolithic web pages, frequently failing to parse modern API specifications, object-level authorization models, or JSON-serialized business logic.
+Modern cloud-native architectures have shifted the primary attack surface to the **REST API layer**. Traditional web application scanners rely on HTML crawling and heuristics tailored for monolithic web pages — often failing to parse API specifications, object-level authorization models, or JSON-serialized business logic.
 
-This framework bridges that gap by implementing a spec-aware recon and exploit engine. It ingests machine-readable API contracts (OpenAPI 3.x / Swagger 2.0), constructs structured endpoint maps, actively executes targeted payloads against live endpoints, captures real HTTP status and payload diffs as proof-of-concept evidence, chains interrelated findings into full kill paths, stores audit history in a persistent database vault, and exports client-ready penetration testing reports.
+This framework bridges that gap by implementing a **spec-aware reconnaissance and exploit engine**:
+
+> **Input** → OpenAPI 3.x / Swagger 2.0 contract  
+> **Process** → Endpoint mapping → Live exploit execution → Finding correlation → Kill-chain derivation  
+> **Output** → CVSS v3.1 scored pentest report with PoC evidence
+
+**Key differentiators from traditional scanners:**
+
+| Capability | Traditional Scanner | This Framework |
+|---|:---:|:---:|
+| API spec-aware recon | ❌ | ✅ |
+| Object-level auth testing (BOLA) | ❌ | ✅ |
+| JWT `alg:none` forgery | ❌ | ✅ |
+| Multi-stage exploit chaining | ❌ | ✅ |
+| CVSS v3.1 vector scoring | ⚠️ Partial | ✅ |
+| Historical audit vault | ❌ | ✅ |
 
 ---
 
 ## System Architecture
 
 ```
-+-------------------------------------------------------------------------+
-|                              React Frontend                             |
-|  - Attack Surface Visualizer       - Interactive Node Topology Graph    |
-|  - Real-time Network Scan Console  - Kill-Chain Flowchart Visualizer    |
-|  - CVSS Risk Breakdown Heatmap     - Pentest Report Generator / Export  |
-+------------------------------------+------------------------------------+
-                                     | REST API / Network Sockets
-+------------------------------------v------------------------------------+
-|                         FastAPI Backend Engine                          |
-|                                                                         |
-|  +--------------------+   +-----------------------+   +---------------+ |
-|  |    Spec Parser     |   |   Attack Orchestrator |   |  CVSS Scorer  | |
-|  | - OpenAPI 3.x      |-->| - Broken Auth Module  |-->| - CVSS v3.1   | |
-|  | - Swagger 2.0      |   | - BOLA / IDOR Module  |   | - Vector Calc | |
-|  | - Schema Extractor |   | - Rate Limit Probe    |   | - Severity    | |
-|  +--------------------+   | - Mass Assignment     |   +---------------+ |
-|            |              | - Data Exposure       |           |         |
-|  +---------v----------+   +-----------------------+   +-------v-------+ |
-|  |    Auth Handler    |               |               | Report Engine | |
-|  | - Bearer / JWT     |   +-----------v-----------+   | - HTML / PDF  | |
-|  | - Dual-Account Swap|   |   Exploit Chaining    |   | - Executive   | |
-|  | - alg:none Forge   |   | - Multi-Stage Chains  |   |   Summary     | |
-|  +--------------------+   +-----------------------+   +---------------+ |
-+------------------------------------+------------------------------------+
-                                     |
-                             +-------v-------+
-                             | SQLite / DB   |
-                             | - Scan Vault  |
-                             | - Findings    |
-                             +---------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          React 19 Frontend                              │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌────────────────────────┐  │
+│  │ Attack Surface    │ │ Real-time Scan   │ │ Report Generator &     │  │
+│  │ Topology Graph    │ │ Console (Live)   │ │ PDF/HTML Export        │  │
+│  ├──────────────────┤ ├──────────────────┤ ├────────────────────────┤  │
+│  │ Kill-Chain        │ │ OWASP Risk       │ │ Historical Dashboard   │  │
+│  │ Flowchart         │ │ Heatmap          │ │ & Scan Vault           │  │
+│  └──────────────────┘ └──────────────────┘ └────────────────────────┘  │
+└─────────────────────────────┬───────────────────────────────────────────┘
+                              │ REST API
+┌─────────────────────────────▼───────────────────────────────────────────┐
+│                       FastAPI Backend Engine                             │
+│                                                                         │
+│  ┌─────────────────┐  ┌──────────────────────┐  ┌───────────────────┐  │
+│  │  Spec Parser    │  │  Attack Orchestrator  │  │  CVSS v3.1        │  │
+│  │  ─────────────  │  │  ────────────────────  │  │  Scoring Engine   │  │
+│  │  • OpenAPI 3.x  │──▶ • Broken Auth Module  │──▶ • Vector Calc     │  │
+│  │  • Swagger 2.0  │  │  • BOLA / IDOR Module │  │  • Base Score     │  │
+│  │  • Schema Parse │  │  • Rate Limit Probe   │  │  • Severity Map   │  │
+│  └─────────────────┘  │  • Mass Assignment    │  └───────────────────┘  │
+│          │            │  • Data Exposure      │           │              │
+│  ┌───────▼─────────┐  └──────────┬───────────┘  ┌───────▼───────────┐  │
+│  │  Auth Handler   │  ┌──────────▼───────────┐  │  Report Engine    │  │
+│  │  ─────────────  │  │  Exploit Chaining    │  │  ──────────────   │  │
+│  │  • Bearer / JWT │  │  ────────────────    │  │  • HTML / PDF     │  │
+│  │  • Token Swap   │  │  • Multi-Stage Paths │  │  • Exec Summary   │  │
+│  │  • alg:none     │  │  • Kill-Chain Graph  │  │  • PoC Evidence   │  │
+│  └─────────────────┘  └──────────────────────┘  └───────────────────┘  │
+└─────────────────────────────┬───────────────────────────────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │  SQLite Database   │
+                    │  ───────────────   │
+                    │  • Scan History    │
+                    │  • Findings Vault  │
+                    │  • PoC Evidence    │
+                    └───────────────────┘
 ```
 
 ---
 
 ## Core Capabilities
 
-### 1. Spec Ingestion and Reconnaissance
-- Ingests OpenAPI 3.x and Swagger 2.0 specifications in JSON and YAML formats.
-- Extracts endpoints, HTTP methods, path/query/header parameters, and JSON request/response schemas.
-- Maps authentication mechanisms including Bearer JWT, API Keys, and Basic Auth.
-- Provides interactive filtering by HTTP method and public versus protected authorization states.
+### 1. Spec Ingestion & Reconnaissance
 
-### 2. Active Vulnerability Audit Modules (OWASP API Top 10)
-- **Broken Object Level Authorization (API1:2023)**: Executes object identifier traversal and dual-account token swapping to verify cross-tenant access boundaries.
-- **Broken Authentication (API2:2023)**: Probes unauthenticated administrative routes and crafts tokens with the `none` algorithm to test cryptographic signature enforcement.
-- **Excessive Data Exposure (API3:2023)**: Compares live response payloads against expected DTO schemas and scans for leaked sensitive attributes (passwords, tokens, SSNs, credit card numbers).
-- **Unrestricted Resource Consumption / Missing Rate Limiting (API4:2023)**: Dispatches high-velocity burst requests (20-30 req/s) to authentication/OTP routes to detect missing HTTP 429 throttling.
-- **Mass Assignment (API6:2023)**: Injects non-whitelisted administrative attributes (`is_admin: true`, `role: admin`, elevated account balances) into JSON mutation requests.
+- Parses **OpenAPI 3.x** and **Swagger 2.0** specifications (JSON / YAML)
+- Extracts endpoints, HTTP methods, path/query/header parameters, and request/response schemas
+- Maps authentication mechanisms — **Bearer JWT**, **API Key**, **Basic Auth**
+- Interactive filtering by HTTP method and authorization state (public vs. protected)
 
-### 3. Exploit Chaining and Kill-Chain Analysis
-- Correlates isolated atomic findings into composite attack paths:
-  - *Chain 1:* BOLA + Excessive Data Exposure -> Full Identity Theft and Account Takeover.
-  - *Chain 2:* Broken Auth + Mass Assignment -> Unauthenticated Superuser Escalation.
-  - *Chain 3:* Missing Rate Limiting + Weak Auth -> Automated 2FA OTP Bypass.
-- Calculates compound CVSS metrics and displays step-by-step kill-chain graphs.
+### 2. Active Vulnerability Audit Modules
+
+Five attack modules aligned to the **OWASP API Security Top 10 (2023)**:
+
+| Module | OWASP ID | Technique |
+|---|---|---|
+| **Broken Object Level Authorization** | API1:2023 | Object ID traversal, dual-account token swap, cross-tenant boundary verification |
+| **Broken Authentication** | API2:2023 | Unauthenticated admin route probing, `alg:none` unsigned JWT forgery |
+| **Excessive Data Exposure** | API3:2023 | Live response vs. DTO schema diff, PII pattern scanning (SSN, credit cards, tokens) |
+| **Missing Rate Limiting** | API4:2023 | Async burst probing (20–30 req/s) on auth/OTP endpoints, HTTP 429 detection |
+| **Mass Assignment** | API6:2023 | Privilege escalation injection (`is_admin: true`, `role: admin`) in mutation requests |
+
+### 3. Exploit Chaining & Kill-Chain Analysis
+
+Correlates isolated findings into **compound multi-stage attack paths**:
+
+| Chain | Attack Path | Composite CVSS |
+|---|---|---|
+| **Chain 1** | BOLA → Data Exposure → Account Takeover | 9.8 (Critical) |
+| **Chain 2** | Broken Auth → Mass Assignment → Superuser Escalation | 9.9 (Critical) |
+| **Chain 3** | Missing Rate Limiting → OTP Brute Force → 2FA Bypass | 8.8 (High) |
 
 ### 4. Interactive Security Visualizations
-- **Attack Surface Node Graph**: Interactive SVG topology depicting communication flows between Client, API Gateway, Microservices, and Databases, highlighting compromised routes.
-- **Kill-Chain Flowchart**: Sequence diagram of multi-stage exploit paths with animated connectors.
-- **OWASP API Risk Heatmap**: Exposure breakdown by vulnerability category.
-- **Security Posture Scorecard**: Gauge index (0-100) reflecting overall perimeter posture.
 
-### 5. Persistent Database Vault & Reporting
-- **Historical Audit Vault**: Stores completed scans, findings, CVSS scores, timestamps, and PoC evidence in an asynchronous SQLite database.
-- **Automated Pentest Reporting**: Generates downloadable HTML/PDF deliverables with Executive Summaries, Risk Matrix, PoC Request/Response snippets, and developer patch guidelines.
+All visualizations are **fully data-driven** — dynamically generated from actual scan results:
+
+- **Attack Surface Topology** — SVG node graph with auto-generated service clusters from endpoint paths, severity-colored compromised routes
+- **Kill-Chain Flowchart** — Multi-stage exploit paths rendered from correlated findings with step-by-step progression
+- **OWASP Risk Heatmap** — Category distribution bars with proportional severity scaling and affected endpoint labels
+- **Security Posture Scorecard** — Dynamic 0–100 gauge with Grade A–F, computed from real CVSS scores, exposure %, and CIA threat analysis
+
+### 5. Persistent Audit Vault & Reporting
+
+- **Historical Scan Vault** — All scans, findings, CVSS scores, and PoC evidence persisted in async SQLite
+- **Automated Pentest Reports** — Downloadable HTML/PDF deliverables with executive summary, risk matrix, request/response PoC snippets, and remediation guidelines
 
 ---
 
@@ -87,26 +152,32 @@ This framework bridges that gap by implementing a spec-aware recon and exploit e
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Backend Engine | Python 3.11+, FastAPI, Pydantic | Spec ingestion, routing, asynchronous attack engine |
-| Attack Layer | httpx (Async HTTP), custom token mutators | High-concurrency network probing and socket tests |
-| Frontend | React 18, Vite, Lucide Icons | Reactive UI, attack surface visualizer, console |
-| Scoring Engine | CVSS v3.1 Standard Library | Base score calculation, metric vector generation |
-| Persistence | SQLite / Async SQLAlchemy | Storage of scan metadata, historical results, and evidence |
-| Testing Infrastructure | Docker Compose (crAPI, vAPI, Petstore) | Controlled environments for validation |
+| **Backend Engine** | Python 3.11+, FastAPI, Pydantic v2 | Spec ingestion, API routing, async attack orchestration |
+| **Attack Layer** | httpx (async), python-jose, custom mutators | High-concurrency HTTP probing, JWT forging, token manipulation |
+| **Frontend** | React 19, Vite 8, React Router, Lucide Icons | Reactive UI, attack surface visualizer, live scan console |
+| **Scoring** | CVSS v3.1 (`cvss` library) | Base score calculation, metric vector string generation |
+| **Persistence** | SQLite, async SQLAlchemy, aiosqlite | Scan metadata, historical results, evidence storage |
+| **Reporting** | Jinja2, WeasyPrint | HTML/PDF penetration testing report generation |
+| **Testing** | pytest, Docker Compose | Unit tests, containerized vulnerable targets |
 
 ---
 
-## Quick Start Guide
+## Quick Start
 
 ### Prerequisites
-- Python 3.11 or higher
-- Node.js 18 or higher
-- Git
 
-### 1. Backend Setup
+| Requirement | Version |
+|---|---|
+| Python | 3.11+ |
+| Node.js | 18+ |
+| Git | Latest |
+
+### 1. Clone & Setup Backend
 
 ```bash
-cd backend
+git clone https://github.com/<your-username>/vapt-web-apis.git
+cd vapt-web-apis/backend
+
 python -m venv venv
 
 # Windows
@@ -115,14 +186,16 @@ python -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-cp .env.example .env   # On Windows: copy .env.example .env
+cp .env.example .env       # Windows: copy .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-- API Documentation: `http://localhost:8000/docs`
-- Health Endpoint: `http://localhost:8000/health`
+| Endpoint | URL |
+|---|---|
+| API Documentation (Swagger UI) | `http://localhost:8000/docs` |
+| Health Check | `http://localhost:8000/health` |
 
-### 2. Frontend Setup
+### 2. Setup Frontend
 
 ```bash
 cd frontend
@@ -130,17 +203,20 @@ npm install
 npm run dev
 ```
 
-- Web Interface: `http://localhost:5173`
+| Endpoint | URL |
+|---|---|
+| Web Interface | `http://localhost:5173` |
 
-### 3. Standalone Live Vulnerable Target (Optional Testing Host)
+### 3. Start Vulnerable Test Target
 
-For running live network exploits locally without Docker:
+For local exploit testing without Docker:
 
 ```bash
 cd backend
 python app/mock_target.py
 ```
-This starts a live vulnerable REST API on `http://127.0.0.1:8888`.
+
+> Launches an intentionally vulnerable REST API on `http://127.0.0.1:8888`
 
 ### 4. Docker Test Targets (Optional)
 
@@ -151,49 +227,121 @@ docker compose up -d
 
 | Container | Port | Description |
 |---|---|---|
-| OWASP crAPI | 8888 | Vulnerable e-commerce application |
+| OWASP crAPI | 8888 | Vulnerable e-commerce API |
 | OWASP vAPI | 7777 | OWASP API Top 10 target |
-| Swagger Petstore | 8081 | Non-vulnerable benchmark for false-positive validation |
+| Swagger Petstore | 8081 | Non-vulnerable false-positive benchmark |
 
 ---
 
-## Available Sample Specifications
+## Sample Specification Library
 
-Ready-to-test specifications located in `samples/`:
-- `samples/owasp-crapi-spec.json`: Official OWASP crAPI benchmark (20+ endpoints covering BOLA, vehicle IDOR, OTP brute force).
-- `samples/vulnerable-ecommerce-api.json`: E-Commerce/Banking API specification targeting all 5 implemented OWASP vulnerability classes.
-- `samples/vampi-vulnerable-api.json`: VAmPI (Vulnerable REST API) — BOLA, Broken Auth, Mass Assignment, Excessive Data Exposure, SQL Injection.
-- `samples/dvws-node-vulnerable-api.json`: DVWS-node (Damn Vulnerable Web Services) — BOLA, Injection, Auth Bypass, File Upload, Path Traversal, Broken Function Level Auth.
-- `samples/reqres-api-spec.json`: Reqres.in public hosted API — **non-vulnerable** benchmark for false-positive validation.
-- `samples/sample-api-spec.json`: Lightweight REST API baseline for basic parsing and mapping verification.
+Pre-built OpenAPI specifications ready for immediate testing:
+
+| Spec File | Type | Coverage |
+|---|---|---|
+| `owasp-crapi-spec.json` | 🔴 Vulnerable | Official OWASP crAPI — 20+ endpoints, BOLA, IDOR, OTP brute force |
+| `vulnerable-ecommerce-api.json` | 🔴 Vulnerable | E-Commerce/Fintech API — all 5 OWASP categories |
+| `vampi-vulnerable-api.json` | 🔴 Vulnerable | VAmPI — BOLA, Broken Auth, Mass Assignment, Data Exposure, SQLi |
+| `dvws-node-vulnerable-api.json` | 🔴 Vulnerable | DVWS-node — Injection, Auth Bypass, File Upload, Path Traversal, BFLA |
+| `reqres-api-spec.json` | 🟢 Non-Vulnerable | Reqres.in — False-positive validation benchmark |
+| `sample-api-spec.json` | ⚪ Baseline | Lightweight spec for parser verification |
+
+> **Testing methodology**: 4 vulnerable targets for exploit validation + 1 non-vulnerable target for false-positive validation + 1 baseline for parser verification
 
 ---
 
-## Verification and Testing
+## Testing & Verification
 
-Execute the automated test suite covering OpenAPI 3.x and Swagger 2.0 parsers:
+Run the automated test suite covering OpenAPI 3.x and Swagger 2.0 parsers:
 
 ```bash
 cd backend
 pytest -v
 ```
 
+### Recommended Full Validation Workflow
+
+```bash
+# 1. Start the vulnerable mock target
+python app/mock_target.py &
+
+# 2. Run the test suite
+pytest -v
+
+# 3. Launch the UI and execute a full scan
+cd ../frontend && npm run dev
+```
+
+Then navigate to **Upload Spec** → load `samples/owasp-crapi-spec.json` → **Fire Live Exploit Scan** → Review findings, kill-chains, and export report.
+
 ---
 
-## Documentation References
+## Documentation
 
-- [IN_DEPTH_TECHNICAL_DOCS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/IN_DEPTH_TECHNICAL_DOCS.md) — Comprehensive, code-level architectural and mathematical engineering documentation.
-- [INTERVIEW_PREP.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/INTERVIEW_PREP.md) — Technical interview guide covering pitches, fundamentals, bug deep-dives, and FAQ.
-- [PROJECT_STATUS.md](file:///c:/Users/Mridul/Desktop/VAPT%20for%20Web%20APIs/other_doc/PROJECT_STATUS.md) — Detailed capability matrix, sample library, and execution roadmap.
+| Document | Description |
+|---|---|
+| [`IN_DEPTH_TECHNICAL_DOCS.md`](other_doc/IN_DEPTH_TECHNICAL_DOCS.md) | Comprehensive code-level architecture, CVSS math, and engineering documentation |
+| [`INTERVIEW_PREP.md`](other_doc/INTERVIEW_PREP.md) | Technical interview guide — elevator pitches, deep-dives, and FAQ |
+| [`PROJECT_STATUS.md`](other_doc/PROJECT_STATUS.md) | Complete capability matrix and implementation status report |
 
 ---
 
-## Ethical and Legal Boundaries
+## Project Structure
 
-This tool is strictly developed for authorized security assessments, defensive engineering, and academic evaluation. Scanning targets without prior explicit written permission from the system owner is illegal and violates computer misuse regulations.
+```
+vapt-web-apis/
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/endpoints/     # FastAPI route handlers
+│   │   ├── attacks/              # OWASP exploit modules (5 modules)
+│   │   │   ├── bola.py           # Broken Object Level Authorization
+│   │   │   ├── broken_auth.py    # Broken Authentication & JWT forgery
+│   │   │   ├── rate_limit.py     # Async burst rate limit probe
+│   │   │   ├── mass_assignment.py# Privilege escalation fuzzer
+│   │   │   └── excessive_data.py # PII leak & schema diff scanner
+│   │   ├── core/                 # Configuration & settings
+│   │   ├── db/                   # SQLAlchemy models & async session
+│   │   ├── reports/              # CVSS scorer, Jinja2 templates, PDF gen
+│   │   ├── services/             # Spec parser, scan engine, auth handler
+│   │   ├── schemas/              # Pydantic request/response models
+│   │   ├── main.py               # FastAPI application entry point
+│   │   └── mock_target.py        # Intentionally vulnerable test server
+│   ├── tests/                    # pytest test suite
+│   └── requirements.txt
+├── frontend/
+│   └── src/
+│       ├── components/           # SecurityDiagrams (topology, heatmap, etc.)
+│       ├── pages/                # SpecUpload, EndpointMap, ScanConsole, Dashboard, Reports
+│       ├── utils/                # Attack engine, audit engine, exploit chaining
+│       ├── context/              # React context for global state
+│       └── services/             # API client layer
+├── samples/                      # 6 pre-built OpenAPI specs for testing
+├── docker/                       # Docker Compose for vulnerable targets
+└── other_doc/                    # Technical docs, interview prep, status
+```
+
+---
+
+## Ethical & Legal Notice
+
+> **This tool is strictly developed for authorized security assessments, defensive engineering, and academic evaluation.**
+>
+> Scanning targets without prior explicit written permission from the system owner is **illegal** and violates computer misuse regulations including but not limited to the Computer Fraud and Abuse Act (CFAA), the IT Act 2000 (India), and the Computer Misuse Act 1990 (UK).
+>
+> Always obtain a signed Rules of Engagement (ROE) document before conducting any security assessment.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built for the security community**
+
+*Automated VAPT Framework for Web APIs — Spec-Aware. Exploit-Driven. Report-Ready.*
+
+</div>
