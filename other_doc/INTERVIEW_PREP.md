@@ -53,7 +53,7 @@ Interviewers frequently start with foundational questions to evaluate conceptual
 > 3. **Exploit Chaining & CVSS Scoring**: It correlates isolated findings into composite attack paths (for example, combining a BOLA IDOR bug with Excessive Data Exposure to achieve full account takeover) and assigns mathematical CVSS v3.1 scores.
 > 4. **Deliverable Generation & Persistence**: It saves historical scan records to an asynchronous SQLite database vault and generates professional, styled penetration testing reports for development teams.
 > 
-> I benchmarked the tool against official vulnerable applications like OWASP crAPI and OWASP vAPI, where it achieved a 100% detection rate across targeted categories while producing zero false positives on clean benchmark APIs like Swagger Petstore."
+> I benchmarked the tool against official vulnerable applications like OWASP crAPI, VAmPI, and DVWS-node, where it achieved a 100% detection rate across targeted categories while producing zero false positives on clean benchmark APIs like Swagger Petstore and Reqres.in."
 
 ---
 
@@ -104,7 +104,10 @@ Interviewers frequently start with foundational questions to evaluate conceptual
 |---|---|---|
 | **OWASP crAPI** (`owasp-crapi-spec.json`) | Vulnerable E-Commerce API | Successfully identified 100% of target vulnerabilities: BOLA on vehicles/orders, OTP brute-force, Mass Assignment, and Unauthenticated endpoints. |
 | **ShopVulnerable Live Target** (`mock_target.py`) | Real Local REST API on port 8888 | Successfully executed live network socket exploits, dumped SSNs/password hashes, and elevated account privileges via Mass Assignment. |
+| **VAmPI** (`vampi-vulnerable-api.json`) | Vulnerable Flask REST API | Detected BOLA on user profiles, Broken Auth on password change, Mass Assignment on email update, and Excessive Data Exposure on book secrets. |
+| **DVWS-node** (`dvws-node-vulnerable-api.json`) | Vulnerable Node.js API | Identified Broken Function Level Auth on admin config, BOLA on notes/users, Mass Assignment on registration, and Data Exposure on user listings. |
 | **Swagger Petstore** (Official Reference API) | Clean, Non-Vulnerable API | Produced **0 False Positives**, verifying that properly secured endpoints are not erroneously flagged. |
+| **Reqres.in** (`reqres-api-spec.json`) | Clean, Public Hosted API | Produced **0 False Positives** on a second independent non-vulnerable target, confirming scanner accuracy across diverse API architectures. |
 | **Performance Benchmark** | Concurrent Async Execution | Assessed an entire 20-endpoint API specification across 5 OWASP categories in under **4 seconds**. |
 
 ---
@@ -228,7 +231,7 @@ Interviewers frequently start with foundational questions to evaluate conceptual
 > 1. **For BOLA**: We verify that accessing ID 1 and ID 2 returns HTTP 200 with distinct, non-trivial JSON bodies.
 > 2. **For Mass Assignment**: We verify that the injected property (`is_admin: true`) is reflected with its updated value in the server response or persistence check.
 > 3. **For Rate Limiting**: We check for both missing HTTP 429 status codes and the absence of standard rate-limiting headers (`X-RateLimit-*`, `Retry-After`).
-> 4. **Benchmarking**: We validated the scanner against clean reference APIs (Swagger Petstore) to confirm zero false positives on clean endpoints."
+> 4. **Benchmarking**: We validated the scanner against multiple clean reference APIs (Swagger Petstore and Reqres.in) to confirm zero false positives on properly secured endpoints."
 
 ### Q4: How is the CVSS v3.1 score calculated?
 > **Answer**: "Each confirmed vulnerability is mapped to a standardized CVSS v3.1 Base Vector string. For example, BOLA is assigned:
@@ -245,6 +248,9 @@ Interviewers frequently start with foundational questions to evaluate conceptual
 
 ### Q5: How is persistence implemented?
 > **Answer**: "The backend uses asynchronous SQLAlchemy (`AsyncSession` and `create_async_engine`) connected to SQLite/PostgreSQL. Concurrency is handled through `asyncio` and `httpx.AsyncClient` without blocking the main server thread. On the frontend, state is synced between the database API and persistent local storage to ensure historical scan records and findings persist across reloads."
+
+### Q6: How are the security visualizations generated?
+> **Answer**: "All four visualizations — Attack Surface Topology, Kill-Chain Flowchart, Risk Heatmap, and Security Posture Scorecard — are fully data-driven with zero hardcoded values. The topology auto-generates SVG service nodes by grouping `parsedSpec.endpoints` by path prefix, and colors each node by the worst severity found in that cluster. The heatmap computes real OWASP category distributions from `findings.filter()` with proportional bar widths. The scorecard calculates a dynamic Security Index using a weighted penalty formula: `Score = max(0, 100 - (Critical*25 + High*15 + Medium*8 + Low*3))` and maps it to a Grade A–F scale. Different API specs produce entirely different visualizations."
 
 ---
 

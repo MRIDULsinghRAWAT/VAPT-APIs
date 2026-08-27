@@ -299,22 +299,27 @@ async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False
 
 ## 7. Frontend Architecture, State Synchronization & Visualizations
 
-The React frontend uses responsive design tokens, persistent state synchronization, and dynamic SVG visualizations.
+The React 19 frontend uses responsive design tokens, persistent state synchronization, and fully data-driven SVG visualizations.
 
 ### A. Dual-Mode State Synchronization (`AppContext.jsx`):
 1. **Local Persistent Storage**: Caches scan runs and active specs to `localStorage` under `vapt_scans_history_v1`.
 2. **Backend DB Sync**: When the FastAPI server is running, the context auto-merges local storage with the backend SQLite database via `GET /api/v1/scans/`.
 
-### B. Interactive Security Visualizations (`SecurityDiagrams.jsx`):
-1. **Network Topology Graph**: An SVG-rendered architectural diagram mapping Gateway $\longrightarrow$ Microservices $\longrightarrow$ Database, dynamically highlighting compromised nodes in red with pulse filters.
-2. **Kill-Chain Flowchart**: A sequence diagram showing the step-by-step progression of multi-stage attacks.
-3. **Risk Heatmap**: Bar visualizations representing the distribution of vulnerabilities across OWASP categories.
-4. **Security Posture Scorecard**: An SVG circular gauge displaying a calculated **Security Posture Index** ($0 - 100$).
+### B. Data-Driven Security Visualizations (`SecurityDiagrams.jsx`):
+All four visualizations are **fully dynamic** — driven by actual scan findings, exploit chains, and parsed spec data. No hardcoded values.
+
+1. **Attack Surface Topology Graph**: Auto-generates SVG service cluster nodes from `parsedSpec.endpoints` grouped by path prefix. Compromised nodes are severity-colored (critical = red, high = orange, medium = yellow) based on live findings. Secure nodes render green.
+2. **Kill-Chain Flowchart**: Renders actual `exploitChains[]` array returned by the correlation engine. Each chain displays its numbered steps, OWASP tags, composite CVSS score, and remediation guidance. Shows an empty-state shield when no chains are correlated.
+3. **OWASP Risk Heatmap**: Category distribution bars computed from `findings.filter()` with no fallback values. Bar widths are proportional to the maximum category count. Each bar displays affected endpoint paths. Categories with zero findings are hidden.
+4. **Security Posture Scorecard**: An SVG circular gauge with a dynamic **Security Index** ($0 - 100$) computed as:
+   $$\text{Score} = \max(0, 100 - (\text{Critical} \times 25 + \text{High} \times 15 + \text{Medium} \times 8 + \text{Low} \times 3))$$
+   Grade scale: A ($\ge 90$), B ($\ge 75$), C ($\ge 50$), D ($\ge 25$), F ($\lt 25$). Metric cards dynamically compute attack surface exposure percentage, peak CVSS, confidentiality threat (detects leaked field types from evidence text), integrity threat, and availability threat.
 
 ---
 
 ## 8. Live Network Target Environment & Benchmarking
 
+### A. Mock Target Server
 **File**: `app/mock_target.py`  
 Runs locally on `http://127.0.0.1:8888` to provide a functional test environment without external dependencies:
 
@@ -331,13 +336,26 @@ Runs locally on `http://127.0.0.1:8888` to provide a functional test environment
 (No Rate Limit)  (BOLA IDOR + SSN Leaks)          (Mass Assign is_admin)    (Unauthenticated)
 ```
 
+### B. Sample Specification Library (6 Specs)
+The framework ships with a curated library of 6 OpenAPI specifications covering three testing tiers:
+
+| Spec | Type | OWASP Coverage |
+|---|---|---|
+| `owasp-crapi-spec.json` | Vulnerable | BOLA, IDOR, OTP brute force (20+ endpoints) |
+| `vulnerable-ecommerce-api.json` | Vulnerable | All 5 implemented OWASP categories |
+| `vampi-vulnerable-api.json` | Vulnerable | BOLA, Broken Auth, Mass Assignment, Data Exposure, SQLi |
+| `dvws-node-vulnerable-api.json` | Vulnerable | Injection, Auth Bypass, File Upload, Path Traversal, BFLA |
+| `reqres-api-spec.json` | Non-Vulnerable | False-positive validation benchmark |
+| `sample-api-spec.json` | Baseline | Parser verification and schema extraction |
+
 ---
 
 ## 9. Edge Cases, Error Handling & False Positive Elimination
 
-1. **Clean Baseline Benchmarking**: The engine was validated against the reference **Swagger Petstore API** to ensure properly secured endpoints do not generate false positives.
-2. **Graceful Degradation**: If the target server is unreachable over live network sockets, the scanner gracefully falls back to spec heuristic analysis.
+1. **Clean Baseline Benchmarking**: The engine was validated against both the reference **Swagger Petstore API** and the **Reqres.in** hosted REST API to ensure properly secured endpoints produce zero false positives across multiple non-vulnerable targets.
+2. **Graceful Degradation**: If the target server is unreachable over live network sockets, the scanner gracefully falls back to spec-based static heuristic analysis, ensuring results are always generated.
 3. **CORS & Network Timeout Resilience**: All async network requests are wrapped with timeouts ($10\text{s}$) and safe exception handlers to prevent scan interruption on unreachable routes.
+4. **Dynamic Visualization Safety**: All four security diagrams handle empty-state gracefully — when no findings exist, they display informative shield icons and messages instead of blank or broken charts.
 
 ---
 
