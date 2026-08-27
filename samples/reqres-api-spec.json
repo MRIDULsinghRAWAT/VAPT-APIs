@@ -1,0 +1,371 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Reqres.in — Hosted REST API",
+    "version": "1.0.0",
+    "description": "Public hosted REST API for front-end testing and prototyping. NON-VULNERABLE — used as a false-positive validation benchmark to ensure the VAPT scanner does not flag clean, well-implemented APIs.",
+    "contact": {
+      "name": "Reqres Project",
+      "url": "https://reqres.in"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://reqres.in/api",
+      "description": "Reqres Public API"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 2 },
+          "email": { "type": "string", "format": "email", "example": "janet.weaver@reqres.in" },
+          "first_name": { "type": "string", "example": "Janet" },
+          "last_name": { "type": "string", "example": "Weaver" },
+          "avatar": { "type": "string", "format": "uri", "example": "https://reqres.in/img/faces/2-image.jpg" }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer", "example": 1 },
+          "per_page": { "type": "integer", "example": 6 },
+          "total": { "type": "integer", "example": 12 },
+          "total_pages": { "type": "integer", "example": 2 },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/User" }
+          }
+        }
+      },
+      "SingleUserResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "Resource": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "cerulean" },
+          "year": { "type": "integer", "example": 2000 },
+          "color": { "type": "string", "example": "#98B2D1" },
+          "pantone_value": { "type": "string", "example": "15-4020" }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "required": ["name", "job"],
+        "properties": {
+          "name": { "type": "string", "example": "morpheus" },
+          "job": { "type": "string", "example": "leader" }
+        }
+      },
+      "CreateUserResponse": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "morpheus" },
+          "job": { "type": "string", "example": "leader" },
+          "id": { "type": "string", "example": "583" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2024-01-15T10:30:00.000Z" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "eve.holt@reqres.in" },
+          "password": { "type": "string", "example": "pistol" }
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 4 },
+          "token": { "type": "string", "example": "QpwL5tke4Pnpja7X4" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "example": "QpwL5tke4Pnpja7X4" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "List Users (Paginated)",
+        "operationId": "listUsers",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 },
+            "example": 1
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 6 },
+            "example": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of users",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserListResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create User",
+        "operationId": "createUser",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreateUserResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Get Single User",
+        "operationId": "getUser",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SingleUserResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update User (Full)",
+        "operationId": "updateUserFull",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 2
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update User (Partial)",
+        "operationId": "updateUserPartial",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 2
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User partially updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User",
+        "operationId": "deleteUser",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          }
+        }
+      }
+    },
+    "/unknown": {
+      "get": {
+        "summary": "List Resources",
+        "operationId": "listResources",
+        "tags": ["Resources"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of resources"
+          }
+        }
+      }
+    },
+    "/unknown/{id}": {
+      "get": {
+        "summary": "Get Single Resource",
+        "operationId": "getResource",
+        "tags": ["Resources"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resource found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Resource" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found"
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "summary": "Register User",
+        "operationId": "registerUser",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing email or password"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Login User",
+        "operationId": "loginUser",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing email or password"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Users", "description": "User CRUD operations" },
+    { "name": "Resources", "description": "Resource listing endpoints" },
+    { "name": "Authentication", "description": "Register and login endpoints" }
+  ]
+}

@@ -162,6 +162,9 @@ docker compose up -d
 Ready-to-test specifications located in `samples/`:
 - `samples/owasp-crapi-spec.json`: Official OWASP crAPI benchmark (20+ endpoints covering BOLA, vehicle IDOR, OTP brute force).
 - `samples/vulnerable-ecommerce-api.json`: E-Commerce/Banking API specification targeting all 5 implemented OWASP vulnerability classes.
+- `samples/vampi-vulnerable-api.json`: VAmPI (Vulnerable REST API) — BOLA, Broken Auth, Mass Assignment, Excessive Data Exposure, SQL Injection.
+- `samples/dvws-node-vulnerable-api.json`: DVWS-node (Damn Vulnerable Web Services) — BOLA, Injection, Auth Bypass, File Upload, Path Traversal, Broken Function Level Auth.
+- `samples/reqres-api-spec.json`: Reqres.in public hosted API — **non-vulnerable** benchmark for false-positive validation.
 - `samples/sample-api-spec.json`: Lightweight REST API baseline for basic parsing and mapping verification.
 
 ---

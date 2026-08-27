@@ -1,0 +1,487 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "DVWS-node — Damn Vulnerable Web Services",
+    "version": "1.0.0",
+    "description": "Intentionally vulnerable Node.js REST API for security testing and training. Covers OWASP API Top 10 including: Broken Authentication, BOLA/IDOR, Injection (SQL/NoSQL/Command), SSRF, XXE, Mass Assignment, File Upload abuse, and GraphQL introspection.",
+    "contact": {
+      "name": "DVWS-node Project",
+      "url": "https://github.com/snoopysecurity/dvws-node"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "DVWS-node Local Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token obtained via /api/login."
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Optional API key for service-to-service calls."
+      }
+    },
+    "schemas": {
+      "UserCredentials": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string", "example": "admin" },
+          "password": { "type": "string", "example": "letmein" }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "username": { "type": "string", "example": "admin" },
+          "email": { "type": "string", "format": "email", "example": "admin@dvws.local" },
+          "role": { "type": "string", "example": "admin" },
+          "api_key": { "type": "string", "example": "sk-dvws-a1b2c3d4e5", "description": "VULNERABILITY: API key leaked in profile response" },
+          "password_hash": { "type": "string", "example": "$2b$10$XYZ...", "description": "VULNERABILITY: Password hash exposed — Excessive Data Exposure" },
+          "ssn": { "type": "string", "example": "123-45-6789", "description": "VULNERABILITY: PII leaked in response" }
+        }
+      },
+      "Note": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 42 },
+          "user_id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "My Private Note" },
+          "content": { "type": "string", "example": "This contains sensitive information" },
+          "is_private": { "type": "boolean", "example": true }
+        }
+      },
+      "SearchQuery": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "example": "test", "description": "VULNERABILITY: Directly interpolated into database query — SQL/NoSQL Injection" }
+        }
+      },
+      "UploadedFile": {
+        "type": "object",
+        "properties": {
+          "filename": { "type": "string", "example": "report.pdf" },
+          "path": { "type": "string", "example": "/uploads/report.pdf" },
+          "size": { "type": "integer", "example": 204800 }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "summary": "User Authentication",
+        "operationId": "loginUser",
+        "tags": ["Authentication"],
+        "description": "VULNERABILITY: No rate limiting, no account lockout. Susceptible to credential stuffing and brute force attacks.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserCredentials" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token returned on success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiJ9..." },
+                    "user": { "$ref": "#/components/schemas/UserProfile" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/register": {
+      "post": {
+        "summary": "Register New User",
+        "operationId": "registerUser",
+        "tags": ["Authentication"],
+        "description": "VULNERABILITY: Mass Assignment — 'role' field accepted in registration body, allowing self-escalation to admin.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password", "email"],
+                "properties": {
+                  "username": { "type": "string", "example": "newuser" },
+                  "password": { "type": "string", "example": "password123" },
+                  "email": { "type": "string", "format": "email", "example": "newuser@dvws.local" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created"
+          },
+          "409": {
+            "description": "Username already exists"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "List All Users",
+        "operationId": "listUsers",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: Returns all user records including password hashes, SSNs, and API keys — Excessive Data Exposure.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of user profiles with sensitive data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserProfile" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "summary": "Get User by ID",
+        "operationId": "getUserById",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: BOLA/IDOR — any authenticated user can access any other user's profile by changing the ID parameter.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update User Profile",
+        "operationId": "updateUser",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: BOLA — can update any user's profile. Mass Assignment — 'role' field accepted, privilege escalation possible.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 2
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "username": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User Account",
+        "operationId": "deleteUser",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: BOLA — any authenticated user can delete any other user's account.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/notes": {
+      "get": {
+        "summary": "List All Notes",
+        "operationId": "listNotes",
+        "tags": ["Notes"],
+        "description": "VULNERABILITY: Returns ALL notes including other users' private notes — Broken Function Level Authorization.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of all notes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Note" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Note",
+        "operationId": "createNote",
+        "tags": ["Notes"],
+        "description": "VULNERABILITY: Mass Assignment — user_id in body allows creating notes as other users.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "content"],
+                "properties": {
+                  "title": { "type": "string", "example": "My Note" },
+                  "content": { "type": "string", "example": "Note content here" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Note created"
+          }
+        }
+      }
+    },
+    "/api/notes/{id}": {
+      "get": {
+        "summary": "Get Note by ID",
+        "operationId": "getNoteById",
+        "tags": ["Notes"],
+        "description": "VULNERABILITY: BOLA — any user can read any note by enumerating IDs, including private notes.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Note" }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found"
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "post": {
+        "summary": "Search Records",
+        "operationId": "searchRecords",
+        "tags": ["Search"],
+        "description": "VULNERABILITY: Query parameter directly interpolated into database query — SQL Injection and NoSQL Injection.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SearchQuery" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results"
+          }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "summary": "Upload File",
+        "operationId": "uploadFile",
+        "tags": ["Files"],
+        "description": "VULNERABILITY: No file type validation — allows upload of executable scripts (.php, .jsp, .sh). No size limit enforcement.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File to upload (no validation on type or size)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UploadedFile" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/files/{filename}": {
+      "get": {
+        "summary": "Download File by Name",
+        "operationId": "downloadFile",
+        "tags": ["Files"],
+        "description": "VULNERABILITY: Path traversal possible — ../../etc/passwd can be injected via filename parameter.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "report.pdf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content"
+          },
+          "404": {
+            "description": "File not found"
+          }
+        }
+      }
+    },
+    "/api/admin/config": {
+      "get": {
+        "summary": "Get Server Configuration",
+        "operationId": "getAdminConfig",
+        "tags": ["Admin"],
+        "description": "VULNERABILITY: Broken Function Level Authorization — accessible without admin role check. Exposes DB credentials, JWT secrets, and internal IPs.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Server configuration including secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "db_host": { "type": "string", "example": "mongodb://localhost:27017" },
+                    "jwt_secret": { "type": "string", "example": "supersecretkey123" },
+                    "internal_services": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "example": ["http://10.0.0.5:6379", "http://10.0.0.10:9200"]
+                    },
+                    "debug_mode": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "Admin — List All Users with Credentials",
+        "operationId": "adminListUsers",
+        "tags": ["Admin"],
+        "description": "VULNERABILITY: Broken Function Level Authorization — admin endpoint accessible by regular users. Returns plaintext passwords.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "All users with credentials exposed"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Authentication", "description": "Login and registration — Broken Auth, Rate Limiting" },
+    { "name": "Users", "description": "User CRUD — BOLA, Mass Assignment, Data Exposure" },
+    { "name": "Notes", "description": "Notes CRUD — BOLA, Broken Function Level Auth" },
+    { "name": "Search", "description": "Search functionality — SQL/NoSQL Injection" },
+    { "name": "Files", "description": "File operations — Unrestricted Upload, Path Traversal" },
+    { "name": "Admin", "description": "Admin panel — Broken Function Level Authorization" }
+  ]
+}

@@ -1,0 +1,395 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "VAmPI - Vulnerable REST API",
+    "version": "2.0.0",
+    "description": "Intentionally vulnerable REST API based on OWASP API Security Top 10. Originally built with Python Flask for security testing and training. Covers: Broken Authentication, BOLA/IDOR, Mass Assignment, Excessive Data Exposure, SQL Injection, and Unauthorized Password Change.",
+    "contact": {
+      "name": "VAmPI Project",
+      "url": "https://github.com/erev0s/VAmPI"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "VAmPI Local Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from /users/v1/login endpoint."
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "admin" },
+          "email": { "type": "string", "format": "email", "example": "admin@vampi.local" },
+          "password": { "type": "string", "example": "pass123" },
+          "admin": { "type": "boolean", "example": false }
+        }
+      },
+      "Book": {
+        "type": "object",
+        "properties": {
+          "book_title": { "type": "string", "example": "API Security Handbook" },
+          "secret": { "type": "string", "example": "This book contains internal secrets", "description": "VULNERABILITY: Sensitive field exposed in responses — Excessive Data Exposure" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string", "example": "admin" },
+          "password": { "type": "string", "example": "pass123" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "auth_token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiJ9..." },
+          "message": { "type": "string", "example": "Successfully logged in" },
+          "status": { "type": "string", "example": "success" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["username", "password", "email"],
+        "properties": {
+          "username": { "type": "string", "example": "newuser" },
+          "password": { "type": "string", "example": "newpass123" },
+          "email": { "type": "string", "format": "email", "example": "newuser@vampi.local" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "VAmPI Home",
+        "operationId": "getHome",
+        "tags": ["General"],
+        "responses": {
+          "200": {
+            "description": "Welcome message and API version"
+          }
+        }
+      }
+    },
+    "/createdb": {
+      "get": {
+        "summary": "Initialize Vulnerable Database",
+        "operationId": "createDatabase",
+        "tags": ["General"],
+        "description": "Populates the database with default vulnerable users and books.",
+        "responses": {
+          "200": {
+            "description": "Database initialized with default vulnerable data"
+          }
+        }
+      }
+    },
+    "/users/v1": {
+      "get": {
+        "summary": "List All Users",
+        "operationId": "listUsers",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: Returns all registered users with sensitive attributes — Excessive Data Exposure.",
+        "responses": {
+          "200": {
+            "description": "Full list of users with emails and admin status exposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/User" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/v1/register": {
+      "post": {
+        "summary": "Register New User",
+        "operationId": "registerUser",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: No rate limiting on registration — can be brute-forced. Also susceptible to Mass Assignment if 'admin' field is injected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "Username already exists"
+          }
+        }
+      }
+    },
+    "/users/v1/login": {
+      "post": {
+        "summary": "User Login",
+        "operationId": "loginUser",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: No rate limiting — brute force possible. No account lockout policy.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, JWT token returned",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/users/v1/{username}": {
+      "get": {
+        "summary": "Get User by Username",
+        "operationId": "getUserByUsername",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: No authorization check — any user can access any other user's profile (BOLA/IDOR).",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "admin"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile with sensitive fields exposed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User",
+        "operationId": "deleteUser",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: Broken Object Level Authorization — any authenticated user can delete other users.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "victim_user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/users/v1/{username}/email": {
+      "put": {
+        "summary": "Update User Email",
+        "operationId": "updateUserEmail",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: Mass Assignment — injecting 'admin: true' in the request body can escalate privileges.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "normaluser"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "newemail@vampi.local" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Email updated"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/users/v1/{username}/password": {
+      "put": {
+        "summary": "Update User Password",
+        "operationId": "updateUserPassword",
+        "tags": ["Users"],
+        "description": "VULNERABILITY: Broken Authentication — any authenticated user can change any other user's password without knowing the current password (BOLA + Auth Bypass).",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "admin"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": { "type": "string", "example": "hacked_password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password updated"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/books/v1": {
+      "get": {
+        "summary": "List All Books",
+        "operationId": "listBooks",
+        "tags": ["Books"],
+        "description": "VULNERABILITY: Returns secret field in response — Excessive Data Exposure.",
+        "responses": {
+          "200": {
+            "description": "Array of books with secret fields exposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "books": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Book" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add New Book",
+        "operationId": "addBook",
+        "tags": ["Books"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Book" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Book added successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/books/v1/{book_title}": {
+      "get": {
+        "summary": "Get Book by Title",
+        "operationId": "getBookByTitle",
+        "tags": ["Books"],
+        "description": "VULNERABILITY: SQL Injection possible via book_title parameter. Also leaks secret field.",
+        "parameters": [
+          {
+            "name": "book_title",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "API Security Handbook"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Book details with secret exposed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Book" }
+              }
+            }
+          },
+          "404": {
+            "description": "Book not found"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "General", "description": "General API endpoints" },
+    { "name": "Users", "description": "User management — contains BOLA, Broken Auth, Mass Assignment vulnerabilities" },
+    { "name": "Books", "description": "Book management — contains Excessive Data Exposure and SQL Injection vulnerabilities" }
+  ]
+}
