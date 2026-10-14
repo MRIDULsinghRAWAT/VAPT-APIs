@@ -169,18 +169,25 @@ a {
   flex-direction: column;
   position: relative;
   z-index: 2; /* Sits cleanly above grain texture */
-  padding: var(--frame-width);
+  padding-top: 0;
 }
 
-/* ── Digitalists Exact Top Navigation Bar ── */
+/* ── Digitalists Rigid / Sticky Top Navigation Bar ── */
 .top-navbar {
+  position: sticky;
+  top: var(--frame-width);
+  left: var(--frame-width);
+  right: var(--frame-width);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 1.25rem 2rem;
+  padding: 1.15rem 3.5rem;
   border-bottom: 1px solid var(--border-subtle);
-  background: transparent;
+  background: rgba(236, 234, 229, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   flex-wrap: nowrap;
 }
 
