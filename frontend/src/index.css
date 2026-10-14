@@ -172,24 +172,29 @@ a {
   padding-top: 0;
 }
 
-/* ── Digitalists Rigid / Sticky Top Navigation Bar (Frosted Glassmorphism) ── */
+/* ── Digitalists Rigid / Floating Glassmorphic Top Bar ── */
 .top-navbar {
   position: sticky;
-  top: var(--frame-width);
-  left: var(--frame-width);
-  right: var(--frame-width);
+  top: calc(var(--frame-width) + 12px);
+  margin: 12px 2.5rem 1rem;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 1.15rem 3.5rem;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  padding: 0.95rem 2.5rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    0 16px 36px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.03);
   flex-wrap: nowrap;
+  transition: all var(--transition-base);
 }
 
 /* 1. Left Brand & Swatch */
