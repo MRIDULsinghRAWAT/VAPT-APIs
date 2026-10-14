@@ -85,7 +85,7 @@ export default function Layout() {
 
           <div className="status-live-pill" title="Security Daemon Online">
             <span className="live-dot" />
-            <span className="live-text">Geng!</span>
+            <span className="live-text-brand">geng<span>!</span></span>
           </div>
         </div>
       </header>

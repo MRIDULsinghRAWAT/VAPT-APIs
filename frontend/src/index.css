@@ -455,6 +455,20 @@ a {
   color: #000000;
 }
 
+.live-text-brand {
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #000000;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.live-text-brand span {
+  font-weight: 400;
+}
+
 /* ── Main Content Area ── */
 .main-content-fluid {
   flex: 1;
