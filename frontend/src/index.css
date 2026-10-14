@@ -455,18 +455,25 @@ a {
   color: #000000;
 }
 
-.live-text-brand {
+.brand-geng-tag {
   font-family: var(--font-main);
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: #000000;
+  color: var(--text-primary);
   line-height: 1;
-  text-decoration: none;
+  cursor: default;
+  user-select: none;
+  transition: all var(--transition-fast);
 }
 
-.live-text-brand span {
+.brand-geng-tag span {
   font-weight: 400;
+}
+
+.brand-geng-tag:hover {
+  color: #000000;
+  transform: scale(1.05);
 }
 
 /* ── Main Content Area ── */

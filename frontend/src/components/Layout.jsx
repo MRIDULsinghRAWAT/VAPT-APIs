@@ -83,10 +83,9 @@ export default function Layout() {
             START SCAN <span className="cta-dot">■</span>
           </NavLink>
 
-          <div className="status-live-pill" title="Security Daemon Online">
-            <span className="live-dot" />
-            <span className="live-text-brand">geng<span>!</span></span>
-          </div>
+          <span className="brand-geng-tag">
+            geng<span>!</span>
+          </span>
         </div>
       </header>
 
