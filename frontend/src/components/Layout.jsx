@@ -77,17 +77,16 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Right: Black CTA Button + Search + TL;TR */}
+        {/* Right: Black CTA Button + Live Status Badge */}
         <div className="top-right-group">
           <NavLink to="/scan" className="btn-cta-black">
             START SCAN <span className="cta-dot">■</span>
           </NavLink>
 
-          <button className="icon-search-btn" title="Search" aria-label="Search">
-            <Search size={18} strokeWidth={2} />
-          </button>
-
-          <span className="tltr-tag">TL;TR</span>
+          <div className="status-live-pill" title="Security Daemon Online">
+            <span className="live-dot" />
+            <span className="live-text">DEFENSE ACTIVE</span>
+          </div>
         </div>
       </header>
 
