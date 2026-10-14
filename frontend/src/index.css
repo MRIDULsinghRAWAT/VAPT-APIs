@@ -172,11 +172,11 @@ a {
   padding-top: 0;
 }
 
-/* ── Digitalists Rigid / Floating Glassmorphic Top Bar ── */
+/* ── Ultra-Glassmorphism Top Bar (First-Glance Crystal Glass Look) ── */
 .top-navbar {
   position: sticky;
   top: calc(var(--frame-width) + 12px);
-  margin: 12px 2.5rem 1rem;
+  margin: 12px 2.5rem 1.25rem;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -184,17 +184,44 @@ a {
   gap: 1.5rem;
   padding: 0.95rem 2.5rem;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.42) 45%,
+    rgba(255, 255, 255, 0.58) 100%
+  );
+  backdrop-filter: blur(28px) saturate(210%);
+  -webkit-backdrop-filter: blur(28px) saturate(210%);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
   box-shadow: 
-    0 16px 36px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.04),
-    inset 0 1px 1px rgba(255, 255, 255, 0.9),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+    0 20px 48px -10px rgba(0, 0, 0, 0.12),
+    0 8px 18px -4px rgba(0, 0, 0, 0.05),
+    inset 0 2px 4px rgba(255, 255, 255, 0.95),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.03);
   flex-wrap: nowrap;
+  position: sticky;
+  overflow: hidden;
   transition: all var(--transition-base);
+}
+
+/* Diagonal glass light reflection streak across the bar */
+.top-navbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -20%;
+  width: 140%;
+  height: 45%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  pointer-events: none;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 
 /* 1. Left Brand & Swatch */
