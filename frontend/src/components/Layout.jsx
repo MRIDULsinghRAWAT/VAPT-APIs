@@ -6,6 +6,7 @@ import {
   Play,
   FileText,
   Shield,
+  Zap,
 } from 'lucide-react'
 
 const navItems = [
@@ -22,8 +23,18 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Shield size={22} style={{ color: 'var(--accent-cyan)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              background: 'var(--primary-accent)',
+              borderRadius: 'var(--radius-sm)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Shield size={18} style={{ color: '#0a0a0a' }} />
+            </div>
             <h1>VAPT Engine</h1>
           </div>
           <p className="subtitle">API Security Testing</p>
@@ -39,20 +50,40 @@ export default function Layout() {
                 `nav-link ${isActive ? 'active' : ''}`
               }
             >
-              <Icon size={20} />
+              <Icon size={18} />
               <span>{label}</span>
             </NavLink>
           ))}
         </nav>
 
         <div style={{
-          padding: '1rem 1.5rem',
+          padding: '1rem 1.25rem',
           borderTop: '1px solid var(--border-subtle)',
-          fontSize: '0.7rem',
-          color: 'var(--text-muted)',
         }}>
-          <p>v0.1.0 — Phase 1</p>
-          <p style={{ marginTop: '0.25rem' }}>API Pentesting Framework</p>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            marginBottom: '0.5rem',
+          }}>
+            <Zap size={12} style={{ color: 'var(--primary-accent)' }} />
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.65rem',
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+            }}>
+              v0.1.0 — Phase 1
+            </span>
+          </div>
+          <div style={{
+            fontSize: '0.72rem',
+            color: 'var(--text-muted)',
+            lineHeight: 1.4,
+          }}>
+            OWASP API Top 10 Pentest Framework
+          </div>
         </div>
       </aside>
 

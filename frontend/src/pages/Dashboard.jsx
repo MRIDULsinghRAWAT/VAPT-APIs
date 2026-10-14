@@ -30,10 +30,10 @@ export default function Dashboard() {
             <p>Real-time attack surface intelligence and automated pentest posture overview</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0f172a', border: '1px solid #1e293b', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.78rem', color: '#94a3b8' }}>
-            <Database size={14} style={{ color: 'var(--accent-cyan)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ffffff', border: '1px solid var(--border-editorial)', padding: '0.45rem 0.85rem', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-secondary)', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+            <Database size={14} style={{ color: 'var(--text-primary)' }} />
             <span>Database Storage: </span>
-            <strong style={{ color: '#22c55e' }}>PERSISTED ({scans.length} Saved Scans)</strong>
+            <strong style={{ color: 'var(--text-primary)' }}>PERSISTED ({scans.length} Saved Scans)</strong>
           </div>
         </div>
       </div>
