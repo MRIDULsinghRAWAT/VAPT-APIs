@@ -23,6 +23,7 @@ class Settings(BaseSettings):
         "http://localhost:5173",   # Vite dev server
         "http://localhost:3000",   # CRA fallback
         "http://127.0.0.1:5173",
+        "*",
     ]
 
     # ── Database ──
