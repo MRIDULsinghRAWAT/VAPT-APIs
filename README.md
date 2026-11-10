@@ -8,11 +8,14 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![OWASP](https://img.shields.io/badge/OWASP_API_Top_10-000000?style=for-the-badge&logo=owasp&logoColor=white)](https://owasp.org/API-Security/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://vapt-ap-is.vercel.app/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 An automated, spec-aware security assessment framework that ingests **OpenAPI/Swagger** specifications, maps API attack surfaces, executes targeted dynamic exploits across **OWASP API Security Top 10** vulnerabilities, correlates multi-stage exploit chains, persists historical audit records, and generates **CVSS v3.1** scored penetration testing deliverables.
 
-[Getting Started](#-quick-start) · [Architecture](#-system-architecture) · [Attack Modules](#-active-vulnerability-audit-modules) · [Sample Library](#-sample-specification-library) · [Documentation](#-documentation)
+🌐 **Live Deployment:** [https://vapt-ap-is.vercel.app/](https://vapt-ap-is.vercel.app/)
+
+[Live Demo](https://vapt-ap-is.vercel.app/) · [Getting Started](#-quick-start) · [Architecture](#-system-architecture) · [Attack Modules](#-active-vulnerability-audit-modules) · [Sample Library](#-sample-specification-library) · [Documentation](#-documentation)
 
 </div>
 
@@ -236,7 +239,8 @@ npm run dev
 
 | Endpoint | URL |
 |---|---|
-| Web Interface | `http://localhost:5173` |
+| Web Interface (Local) | `http://localhost:5173` |
+| Web Interface (Live Production) | [`https://vapt-ap-is.vercel.app/`](https://vapt-ap-is.vercel.app/) |
 
 ### 3. Start Vulnerable Test Target
 

@@ -8,9 +8,9 @@ This guide walks you through deploying both the **FastAPI Backend** and the **Re
 
 ```
 ┌─────────────────────────────────┐       REST API / CORS       ┌────────────────────────────────┐
-│      Vercel / Netlify           │ ──────────────────────────▶ │      Render / Railway          │
+│      Vercel (Live Frontend)     │ ──────────────────────────▶ │      Render / Railway          │
 │   (React 19 + Vite Frontend)    │                             │    (FastAPI + Python Backend)  │
-│  https://your-vapt.vercel.app   │                             │  https://vapt-api.onrender.com │
+│    https://vapt-ap-is.vercel.app │                             │  https://vapt-api.onrender.com │
 └─────────────────────────────────┘                             └────────────────────────────────┘
 ```
 
