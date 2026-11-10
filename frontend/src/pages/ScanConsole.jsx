@@ -14,12 +14,14 @@ import {
   ArrowRight,
   Flame,
   Radio,
+  Sparkles,
 } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
 import { executeLiveNetworkScan } from '../utils/realAttackEngine'
 import { runClientSideAudit } from '../utils/auditEngine'
 import { deriveExploitChains } from '../utils/exploitChain'
 import SecurityDiagrams from '../components/SecurityDiagrams'
+import RemediationPanel from '../components/RemediationPanel'
 
 export default function ScanConsole() {
   const { parsedSpec, addScan, latestFindings, setLatestFindings } = useAppContext()
@@ -33,6 +35,7 @@ export default function ScanConsole() {
   const [logs, setLogs] = useState([])
   const [expandedFinding, setExpandedFinding] = useState(null)
   const [activeTab, setActiveTab] = useState('atomic')
+  const [aiFixFinding, setAiFixFinding] = useState(null)
 
   const exploitChains = useMemo(() => {
     return deriveExploitChains(latestFindings)
@@ -368,6 +371,34 @@ export default function ScanConsole() {
                           <p style={{ color: 'var(--severity-low)', background: 'rgba(34, 197, 94, 0.08)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)' }}>
                             💡 {f.remediation}
                           </p>
+                        </div>
+
+                        {/* AI Remediation Button + Panel */}
+                        <div>
+                          {aiFixFinding === f.id ? (
+                            <RemediationPanel
+                              finding={f}
+                              onClose={() => setAiFixFinding(null)}
+                            />
+                          ) : (
+                            <button
+                              className="btn btn-secondary"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                fontSize: '0.82rem',
+                                padding: '0.5rem 0.9rem',
+                                background: 'rgba(99, 102, 241, 0.1)',
+                                border: '1px solid rgba(99, 102, 241, 0.3)',
+                                color: '#a5b4fc',
+                              }}
+                              onClick={() => setAiFixFinding(f.id)}
+                            >
+                              <Sparkles size={14} />
+                              Get AI-Powered Fix
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}

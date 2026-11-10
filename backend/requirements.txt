@@ -16,3 +16,6 @@ weasyprint>=60.0
 cvss>=2.6
 rich>=13.7.0
 python-dotenv>=1.0.0
+
+# AI (Gemini LLM)
+google-generativeai>=0.8.0

@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     DEFAULT_CONCURRENCY: int = 10      # max concurrent attack requests
     RATE_LIMIT_BURST_COUNT: int = 50   # requests in rate-limit probe
 
+    # ── AI (Gemini) ──
+    GEMINI_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

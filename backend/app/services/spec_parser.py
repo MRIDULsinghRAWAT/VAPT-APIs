@@ -66,7 +66,10 @@ def _load_spec(raw: str, filename: str) -> Dict[str, Any]:
 
     # Try YAML as fallback
     try:
-        return yaml.safe_load(raw)
+        data = yaml.safe_load(raw)
+        if not isinstance(data, dict):
+            raise ValueError("Could not parse spec as JSON or YAML.")
+        return data
     except yaml.YAMLError:
         raise ValueError("Could not parse spec as JSON or YAML.")
 

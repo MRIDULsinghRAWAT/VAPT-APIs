@@ -171,6 +171,11 @@ All visualizations are **fully data-driven** — dynamically generated from actu
 - **Historical Scan Vault** — All scans, findings, CVSS scores, and PoC evidence persisted in async SQLite
 - **Automated Pentest Reports** — Downloadable HTML/PDF deliverables with executive summary, risk matrix, request/response PoC snippets, and remediation guidelines
 
+### 6. AI Security Assistant & Remediation Engine (Gemini LLM)
+
+- **One-Click AI Remediation** — Contextual vulnerability analysis directly on finding cards with plain-English exploit explanations, copy-paste FastAPI/Python fix snippets, OWASP references, and CWE mapping.
+- **Interactive Security Chat** — Natural language assistant ("Talk to Your Scan") loaded with real-time scan findings context. Generates executive briefings, bug bounty reports, and prioritizes remediation roadmaps.
+
 ---
 
 ## Tech Stack
@@ -178,8 +183,9 @@ All visualizations are **fully data-driven** — dynamically generated from actu
 | Layer | Technology | Purpose |
 |---|---|---|
 | **Backend Engine** | Python 3.11+, FastAPI, Pydantic v2 | Spec ingestion, API routing, async attack orchestration |
+| **AI Assistant** | Google Gemini 2.0 Flash (`google-generativeai`) | Contextual remediation code generation, interactive security chat |
 | **Attack Layer** | httpx (async), python-jose, custom mutators | High-concurrency HTTP probing, JWT forging, token manipulation |
-| **Frontend** | React 19, Vite 8, React Router, Lucide Icons | Reactive UI, attack surface visualizer, live scan console |
+| **Frontend** | React 19, Vite 8, React Router, Lucide Icons | Reactive UI, attack surface visualizer, live scan console, AI chat |
 | **Scoring** | CVSS v3.1 (`cvss` library) | Base score calculation, metric vector string generation |
 | **Persistence** | SQLite, async SQLAlchemy, aiosqlite | Scan metadata, historical results, evidence storage |
 | **Reporting** | Jinja2, WeasyPrint | HTML/PDF penetration testing report generation |

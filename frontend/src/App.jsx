@@ -5,6 +5,7 @@ import SpecUpload from './pages/SpecUpload'
 import EndpointMap from './pages/EndpointMap'
 import ScanConsole from './pages/ScanConsole'
 import Reports from './pages/Reports'
+import AIChat from './pages/AIChat'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="endpoints" element={<EndpointMap />} />
         <Route path="scan" element={<ScanConsole />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="ai-chat" element={<AIChat />} />
       </Route>
     </Routes>
   )

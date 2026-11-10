@@ -27,7 +27,9 @@
 | **Live Vulnerable Target Server** | **Completed** | Standalone FastAPI mock server (`mock_target.py`) running on port 8888 for local, zero-Docker network exploit testing. |
 | **Sample Spec Library (6 Specs)** | **Completed** | OWASP crAPI, E-Commerce Fintech, VAmPI, DVWS-node (4 vulnerable) + Reqres.in (1 non-vulnerable false-positive benchmark) + Sample baseline (1 parser verification). |
 | **Docker Test Targets** | **Completed** | Docker Compose with OWASP crAPI, OWASP vAPI, and Swagger Petstore containers. |
-| **Automated Test Suite** | **Completed** | pytest coverage for OpenAPI 3.x and Swagger 2.0 spec parsers. |
+| **AI Remediation Engine** | **Completed** | One-click AI fix generator directly in finding cards producing contextual explanations, copy-paste FastAPI fixes, OWASP references, and CWE mapping. |
+| **Interactive Security Chat** | **Completed** | Natural language conversational assistant ("Talk to Your Scan") loaded with real-time scan context for bug bounty reports and risk analysis. |
+| **Automated Test Suite** | **Completed** | 17 pytest tests covering OpenAPI 3.x, Swagger 2.0 parsers, and AI assistant modules. |
 
 ---
 

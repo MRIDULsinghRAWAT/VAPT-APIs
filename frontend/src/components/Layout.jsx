@@ -6,6 +6,7 @@ import {
   Play,
   FileText,
   Search,
+  MessageSquare,
 } from 'lucide-react'
 
 const navItems = [
@@ -14,6 +15,7 @@ const navItems = [
   { to: '/endpoints', icon: Map, label: 'Endpoints' },
   { to: '/scan', icon: Play, label: 'Scan Console' },
   { to: '/reports', icon: FileText, label: 'Reports' },
+  { to: '/ai-chat', icon: MessageSquare, label: 'AI Chat' },
 ]
 
 export default function Layout() {
